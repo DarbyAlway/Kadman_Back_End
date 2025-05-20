@@ -1,0 +1,685 @@
+[
+    {
+        "vendorID": 1,
+        "shop_name": "อิงสร้อยผ้าโพก",
+        "badges": [
+            "เครื่องประดับ"
+        ]
+    },
+    {
+        "vendorID": 2,
+        "shop_name": "โอเสื้อยืด,เชิ้ต,แว่นตา",
+        "badges": [
+            "เสื้อผ้า",
+            "แว่นตา"
+        ]
+    },
+    {
+        "vendorID": 3,
+        "shop_name": "ไอซ์ stronger.store25 เสื้อยืดแจ็คเก็ต",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 4,
+        "shop_name": "พี่ตั้มหอยทากเสื้อยืดของเล่น",
+        "badges": [
+            "เสื้อผ้า",
+            "ของเล่น"
+        ]
+    },
+    {
+        "vendorID": 5,
+        "shop_name": "แม่ต่ายเสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 6,
+        "shop_name": "แม่ต่ายแขนยาว",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 7,
+        "shop_name": "โอมเพี้ยงเสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 8,
+        "shop_name": "พี่เบนซ์กระเป๋า",
+        "badges": [
+            "กระเป๋า"
+        ]
+    },
+    {
+        "vendorID": 9,
+        "shop_name": "ฟ่าง y2k",
+        "badges": [
+            "เสื้อผ้า",
+            "y2k"
+        ]
+    },
+    {
+        "vendorID": 10,
+        "shop_name": "อาย daffodil.3store เสื้อฮิปปี้",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 11,
+        "shop_name": "บับเบิ้ลเสื้อยืด เนคไท ผ้าเช็ดหน้า",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 12,
+        "shop_name": "พี่อาร์มเสื้อกีฬา",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 13,
+        "shop_name": "พี่ฮัทถุงเท้า",
+        "badges": [
+            "ถุงเท้า"
+        ]
+    },
+    {
+        "vendorID": 14,
+        "shop_name": "พี่อ๋องแจ็คเก็ต",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 15,
+        "shop_name": "พี่วุฒิโปสเตอร์",
+        "badges": [
+            "โปสเตอร์"
+        ]
+    },
+    {
+        "vendorID": 16,
+        "shop_name": "พี่พรฮิปปี้แฟรี่ y2k",
+        "badges": [
+            "เสื้อผ้า",
+            "y2k"
+        ]
+    },
+    {
+        "vendorID": 17,
+        "shop_name": "พี่เอ็ม & ครูมายัง y2k",
+        "badges": [
+            "เสื้อผ้า",
+            "y2k"
+        ]
+    },
+    {
+        "vendorID": 18,
+        "shop_name": "โจแว่นตา",
+        "badges": [
+            "แว่นตา"
+        ]
+    },
+    {
+        "vendorID": 19,
+        "shop_name": "พี่เบนซ์",
+        "badges": []
+    },
+    {
+        "vendorID": 20,
+        "shop_name": "เจมส์ วูดูเสื้อยืดล้วน",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 21,
+        "shop_name": "พี่เท่งานเกาหลี",
+        "badges": []
+    },
+    {
+        "vendorID": 22,
+        "shop_name": "พี่ยุ้ยยีน",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 23,
+        "shop_name": "พี่ตั้มยีน",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 24,
+        "shop_name": "แพรถุงเท้ากิ๊ฟช็อป",
+        "badges": [
+            "ถุงเท้า"
+        ]
+    },
+    {
+        "vendorID": 25,
+        "shop_name": "เนยพวงกุญแจเสื้อลายสก็อต",
+        "badges": [
+            "เครื่องประดับ"
+        ]
+    },
+    {
+        "vendorID": 26,
+        "shop_name": "พี่ส้มนาฬิกา",
+        "badges": [
+            "นาฬิกา"
+        ]
+    },
+    {
+        "vendorID": 27,
+        "shop_name": "พี่ดิวสร้อยเงิน",
+        "badges": [
+            "เครื่องประดับ"
+        ]
+    },
+    {
+        "vendorID": 28,
+        "shop_name": "พี่จอยสร้อยแฮนเมด",
+        "badges": [
+            "เครื่องประดับ"
+        ]
+    },
+    {
+        "vendorID": 29,
+        "shop_name": "พี่อาร์ตรองเท้า",
+        "badges": [
+            "รองเท้า"
+        ]
+    },
+    {
+        "vendorID": 30,
+        "shop_name": "ซุ่น & ฝนเสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 31,
+        "shop_name": "ลุงแบงค์เสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 32,
+        "shop_name": "พี่เอ๋เสื้อเชิ้ตฮาวาย",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 33,
+        "shop_name": "จ๊อยซ์กระเป๋า",
+        "badges": [
+            "กระเป๋า"
+        ]
+    },
+    {
+        "vendorID": 34,
+        "shop_name": "เจ๊ก้อยของเล่นเด็ก",
+        "badges": [
+            "ของเล่น"
+        ]
+    },
+    {
+        "vendorID": 35,
+        "shop_name": "น้ำแข็งเสื้อยืดวินเทจ",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 36,
+        "shop_name": "พี่แว่นกางเกง",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 37,
+        "shop_name": "น้ำแป้ง",
+        "badges": []
+    },
+    {
+        "vendorID": 38,
+        "shop_name": "พี่ปุ๋มเสื้อโปโลเชิ้ต",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 39,
+        "shop_name": "แจ็คกางเกง",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 40,
+        "shop_name": "แจ๊สกางเกง",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 41,
+        "shop_name": "พี่อิ๊ของเล่น",
+        "badges": [
+            "ของเล่น"
+        ]
+    },
+    {
+        "vendorID": 42,
+        "shop_name": "พี่แอ๊ดเสื้อเชิ้ต",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 43,
+        "shop_name": "แอมเสื้อยืดวินเทจ",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 44,
+        "shop_name": "พี่แจ๊คเสื้อเชิ้ตวินเทจ",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 45,
+        "shop_name": "ซันเดย์เสื้อเชิ้ต",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 46,
+        "shop_name": "พี่โบ้เสื้อเชิ้ต",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 47,
+        "shop_name": "พี่เจี๊ยบเชิ้ตวินเทจ",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 48,
+        "shop_name": "พี่หมีเสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 49,
+        "shop_name": "พี่วิไล",
+        "badges": []
+    },
+    {
+        "vendorID": 50,
+        "shop_name": "พี่เปี๊ยกเสื้อโปโล",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 51,
+        "shop_name": "พี่หน่อยเดรส",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 52,
+        "shop_name": "พี่หน่อยกางเกง",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 53,
+        "shop_name": "พี่กาญแจ็คเก็ต",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 54,
+        "shop_name": "แจ๊คพรีออเดอร์",
+        "badges": []
+    },
+    {
+        "vendorID": 55,
+        "shop_name": "ปุ้ยเสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 56,
+        "shop_name": "เบิร์ดเสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 57,
+        "shop_name": "แหม่มกางเกง",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 58,
+        "shop_name": "พี่แขกเสื้อเชิ้ตวินเทจ",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 59,
+        "shop_name": "เฮียนก",
+        "badges": []
+    },
+    {
+        "vendorID": 60,
+        "shop_name": "พี่วิชัย",
+        "badges": []
+    },
+    {
+        "vendorID": 61,
+        "shop_name": "พี่เด่น",
+        "badges": []
+    },
+    {
+        "vendorID": 62,
+        "shop_name": "พี่โจ้",
+        "badges": []
+    },
+    {
+        "vendorID": 63,
+        "shop_name": "พี่ชัย",
+        "badges": []
+    },
+    {
+        "vendorID": 64,
+        "shop_name": "เฮียเบิ้ม",
+        "badges": []
+    },
+    {
+        "vendorID": 65,
+        "shop_name": "พี่โจ้",
+        "badges": []
+    },
+    {
+        "vendorID": 66,
+        "shop_name": "พี่ชัย",
+        "badges": []
+    },
+    {
+        "vendorID": 67,
+        "shop_name": "พี่เบิ้ม",
+        "badges": []
+    },
+    {
+        "vendorID": 68,
+        "shop_name": "ฝ้ายสร้อย",
+        "badges": [
+            "เครื่องประดับ"
+        ]
+    },
+    {
+        "vendorID": 69,
+        "shop_name": "ฝ้ายสร้อย",
+        "badges": [
+            "เครื่องประดับ"
+        ]
+    },
+    {
+        "vendorID": 70,
+        "shop_name": "เดียเล็บทีน",
+        "badges": []
+    },
+    {
+        "vendorID": 71,
+        "shop_name": "แบ้งกี้เครื่องประดับ",
+        "badges": [
+            "เครื่องประดับ"
+        ]
+    },
+    {
+        "vendorID": 72,
+        "shop_name": "ซายรองเท้า",
+        "badges": [
+            "รองเท้า"
+        ]
+    },
+    {
+        "vendorID": 73,
+        "shop_name": "เหนงเสื้อยืดแว่น กางเต๊นท์",
+        "badges": [
+            "เสื้อผ้า",
+            "แว่นตา"
+        ]
+    },
+    {
+        "vendorID": 74,
+        "shop_name": "วนิดา",
+        "badges": []
+    },
+    {
+        "vendorID": 75,
+        "shop_name": "กิ๊กโยะ",
+        "badges": []
+    },
+    {
+        "vendorID": 76,
+        "shop_name": "เวฟ",
+        "badges": []
+    },
+    {
+        "vendorID": 77,
+        "shop_name": "จีรศักดิ์",
+        "badges": []
+    },
+    {
+        "vendorID": 78,
+        "shop_name": "ฮันนี่",
+        "badges": []
+    },
+    {
+        "vendorID": 79,
+        "shop_name": "เต๋าน้อย",
+        "badges": []
+    },
+    {
+        "vendorID": 80,
+        "shop_name": "คาราเมล",
+        "badges": []
+    },
+    {
+        "vendorID": 81,
+        "shop_name": "เป็นหนึ่ง",
+        "badges": []
+    },
+    {
+        "vendorID": 82,
+        "shop_name": "ฟาง",
+        "badges": []
+    },
+    {
+        "vendorID": 83,
+        "shop_name": "กอล์ฟ The Vintage Shop",
+        "badges": []
+    },
+    {
+        "vendorID": 84,
+        "shop_name": "ต้า",
+        "badges": []
+    },
+    {
+        "vendorID": 85,
+        "shop_name": "แม่หมู",
+        "badges": []
+    },
+    {
+        "vendorID": 86,
+        "shop_name": "ปอนด์เสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 87,
+        "shop_name": "น้าวัฒนะ",
+        "badges": []
+    },
+    {
+        "vendorID": 88,
+        "shop_name": "ดิวหนูนา",
+        "badges": []
+    },
+    {
+        "vendorID": 89,
+        "shop_name": "เเชมป์",
+        "badges": []
+    },
+    {
+        "vendorID": 90,
+        "shop_name": "แชมป์",
+        "badges": []
+    },
+    {
+        "vendorID": 91,
+        "shop_name": "พี่ปอใบไม้",
+        "badges": []
+    },
+    {
+        "vendorID": 92,
+        "shop_name": "พี่ต้องของเล่น",
+        "badges": [
+            "ของเล่น"
+        ]
+    },
+    {
+        "vendorID": 93,
+        "shop_name": "น้อยหน่า (nullว่างอังคาร)",
+        "badges": []
+    },
+    {
+        "vendorID": 94,
+        "shop_name": "มิ้น",
+        "badges": []
+    },
+    {
+        "vendorID": 95,
+        "shop_name": "not",
+        "badges": []
+    },
+    {
+        "vendorID": 96,
+        "shop_name": "พี่ป้อม",
+        "badges": []
+    },
+    {
+        "vendorID": 97,
+        "shop_name": "Gary เสื้อยืด",
+        "badges": [
+            "เสื้อผ้า"
+        ]
+    },
+    {
+        "vendorID": 98,
+        "shop_name": "จู๊ดจี้",
+        "badges": []
+    },
+    {
+        "vendorID": 99,
+        "shop_name": "บุญญฤทธิ์",
+        "badges": []
+    },
+    {
+        "vendorID": 100,
+        "shop_name": "พี่ป้อม",
+        "badges": []
+    },
+    {
+        "vendorID": 101,
+        "shop_name": "พัชรี",
+        "badges": []
+    },
+    {
+        "vendorID": 102,
+        "shop_name": "พี่เต้ย",
+        "badges": []
+    },
+    {
+        "vendorID": 103,
+        "shop_name": "พี่หนู",
+        "badges": []
+    },
+    {
+        "vendorID": 104,
+        "shop_name": "พี่ตูน",
+        "badges": []
+    },
+    {
+        "vendorID": 105,
+        "shop_name": "พี่จู๋ RatZone",
+        "badges": []
+    },
+    {
+        "vendorID": 106,
+        "shop_name": "พี่ดรีม & พี่กานต์",
+        "badges": []
+    },
+    {
+        "vendorID": 107,
+        "shop_name": "พี่โน๊ต (ตู้ขาว)",
+        "badges": []
+    },
+    {
+        "vendorID": 108,
+        "shop_name": "พี่หนุ่ม",
+        "badges": []
+    },
+    {
+        "vendorID": 109,
+        "shop_name": "พี่เฟรม",
+        "badges": []
+    },
+    {
+        "vendorID": 110,
+        "shop_name": "พี่ต้น",
+        "badges": []
+    },
+    {
+        "vendorID": 111,
+        "shop_name": "พี่บอล",
+        "badges": []
+    }
+]
