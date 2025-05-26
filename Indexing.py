@@ -1,8 +1,24 @@
+import mysql.connector
 from elasticsearch import Elasticsearch, helpers
-import json
-import os
 from pythainlp.tokenize import syllable_tokenize
+import os
 
+# Step 1: Connect to AWS Aurora (MySQL-compatible)
+conn = mysql.connector.connect(
+    host="kadman-aurora-db-instance-1.clq6qs624meb.ap-southeast-2.rds.amazonaws.com",
+    user="admin",
+    password="12345678",
+    database="kadmandb",
+    port=3306
+)
+
+cursor = conn.cursor(dictionary=True)  # So it returns rows as dicts
+
+# Step 2: Query vendor data
+cursor.execute("SELECT vendorID, shop_name, badges FROM vendors")
+vendors = cursor.fetchall()
+
+# Step 3: Connect to Elasticsearch
 es = Elasticsearch(
     "https://localhost:9200",
     basic_auth=("elastic", os.getenv('ELASTIC_PASSWORD', 'Z_3O+lFyJPcXxPB+UvD-')),
@@ -11,10 +27,12 @@ es = Elasticsearch(
 
 index_name = "kadman"
 
+# Step 4: (Optional) Delete old index
 if es.indices.exists(index=index_name):
     es.indices.delete(index=index_name)
     print("Old index deleted.")
 
+# Step 5: Create index with custom Thai analyzer
 index_body = {
     "settings": {
         "analysis": {
@@ -44,7 +62,7 @@ index_body = {
                 "search_analyzer": "thai_autocomplete"
             },
             "shop_name_syllables": {
-                "type": "keyword"  # store syllable tokens exactly
+                "type": "keyword"
             },
             "badges": {"type": "keyword"}
         }
@@ -54,14 +72,10 @@ index_body = {
 es.indices.create(index=index_name, body=index_body)
 print(f"Index '{index_name}' created with Thai analyzer.")
 
-with open("vendors.json", "r", encoding="utf-8") as f:
-    vendors = json.load(f)
-
-# Tokenize shop_name to syllables
+# Step 6: Tokenize and prepare documents
 for vendor in vendors:
     shop_name = vendor.get("shop_name", "")
-    syllables = syllable_tokenize(shop_name)
-    vendor["shop_name_syllables"] = syllables
+    vendor["shop_name_syllables"] = syllable_tokenize(shop_name)
 
 actions = [
     {
@@ -72,10 +86,15 @@ actions = [
     for vendor in vendors
 ]
 
+# Step 7: Bulk index into Elasticsearch
 helpers.bulk(es, actions)
+print("Data indexed directly from Aurora to Elasticsearch.")
 
+# Step 8: Sample query
 res = es.search(index=index_name, body={"query": {"match_all": {}}}, size=10)
 for hit in res["hits"]["hits"]:
-    print(json.dumps(hit["_source"], ensure_ascii=False, indent=2))
+    print(hit["_source"])
 
-print('Indexing completed.')
+# Cleanup
+cursor.close()
+conn.close()
