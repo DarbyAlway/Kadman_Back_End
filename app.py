@@ -22,7 +22,7 @@ INDEX_NAME = "kadman"
 def search():
     query_text = request.args.get("q", "")
 
-    if query_text:
+    if query_text and len(query_text) > 0:
         query_syllables = syllable_tokenize(query_text)
         query_body = {
             "query": {
