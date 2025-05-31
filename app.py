@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify,Response
 from pythainlp.tokenize import syllable_tokenize
 from dotenv import load_dotenv
 import json
+import re
 
 
 app = Flask(__name__)
@@ -21,16 +22,18 @@ INDEX_NAME = "kadman"
 @app.route("/search", methods=["GET"])
 def search():
     query_text = request.args.get("q", "")
+    cleaned_query = re.sub(r'["\'\s]+', '', query_text)
 
-    if query_text and len(query_text) > 0:
-        query_syllables = syllable_tokenize(query_text)
+
+    if cleaned_query and cleaned_query != "":
+        query_syllables = syllable_tokenize(cleaned_query)
         query_body = {
             "query": {
                 "bool": {
                     "should": [
                         {
                             "multi_match": {
-                                "query": query_text,
+                                "query": cleaned_query,
                                 "fields": ["shop_name", "badges"]
                             }
                         },
@@ -43,6 +46,8 @@ def search():
                 }
             }
         }
+        print(f"Query text: '{cleaned_query}'")
+        print(f"Query body: {json.dumps(query_body, ensure_ascii=False)}")
     else:
         # Match all documents when query is empty
         query_body = {
@@ -50,6 +55,7 @@ def search():
                 "match_all": {}
             }
         }
+     
 
     try:
         result = es.search(index=INDEX_NAME, body=query_body, size=100)
