@@ -7,7 +7,7 @@ import re
 import os
 from dotenv import load_dotenv
 from flask import Response
-
+from Indexing import index_vendors
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
 ES_KEY = os.getenv('ES_KEY')
@@ -80,7 +80,7 @@ def search():
         }
      
     try:
-        result = es.search(index=INDEX_NAME, body=query_body, size=100)
+        result = es.search(index=INDEX_NAME, body=query_body, size=200)
         hits = result.get("hits", {}).get("hits", [])
         results = [hit["_source"] for hit in hits]
 
@@ -110,7 +110,8 @@ def get_all_vendors():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+# Delete selected badges from a vendors table
 @vendors_bp.route("/delete_selected_badges", methods=["POST"])
 def delete_selected_badges():
     try:
@@ -143,5 +144,24 @@ def delete_selected_badges():
 
         return jsonify({"message": "Selected badges removed", "badges left": updated_badges}), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@vendors_bp.route("/add_vendors", methods=["POST"])
+def add_vendors():
+    try:
+        data = request.get_json()
+        shop_name = data.get("shop_name")
+        badges = data.get("badges")
+
+        badge_json = json.dumps(badges, ensure_ascii=False) if badges else None
+        cursor = conn.cursor()
+        sql = "INSERT INTO vendors (shop_name, badges) VALUES (%s, %s)"
+        cursor.execute(sql, (shop_name, badge_json))
+        conn.commit()
+        cursor.close()
+        index_vendors(es,conn)  # Re-index after adding a new vendor
+
+        return jsonify({"message": "Vendor added successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
