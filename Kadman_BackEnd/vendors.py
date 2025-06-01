@@ -110,3 +110,38 @@ def get_all_vendors():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@vendors_bp.route("/delete_selected_badges", methods=["POST"])
+def delete_selected_badges():
+    try:
+        data = request.get_json()
+        vendorID = data.get("vendorID")
+        badges_to_remove = data.get("badges")  # list of badges to remove
+
+        if not vendorID or not isinstance(badges_to_remove, list):
+            return jsonify({"error": "vendorID and list of badges are required"}), 400
+
+        cursor = conn.cursor()
+        cursor.execute("SET NAMES utf8mb4;")
+
+        # Get current badges
+        cursor.execute("SELECT badges FROM vendors WHERE vendorID = %s", (vendorID,))
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({"error": "Vendor not found"}), 404
+
+        current_badges = json.loads(result[0]) if result[0] else []
+
+        # Filter out the badges to remove
+        updated_badges = [b for b in current_badges if b not in badges_to_remove]
+        updated_json = json.dumps(updated_badges, ensure_ascii=False)
+
+        # Update the DB
+        cursor.execute("UPDATE vendors SET badges = %s WHERE vendorID = %s", (updated_json, vendorID))
+        conn.commit()
+        cursor.close()
+
+        return jsonify({"message": "Selected badges removed", "badges left": updated_badges}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
