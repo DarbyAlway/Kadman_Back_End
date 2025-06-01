@@ -26,32 +26,34 @@ def update_badges():
     try:
         cursor = conn.cursor()
 
-        # Get json from request
         data = request.get_json()
         vendorID = data.get("vendorID")
+        badge_name = data.get("badges")  # this is already a Python list
         shop_name = data.get("shop_name")
-        badge_name = data.get("badges")
-        badge_json = json.dumps(badge_name, ensure_ascii=False)   
-        print("vendors:", vendorID, badge_json)
+        
 
+        # Save to MySQL
         sql = "UPDATE vendors SET badges = %s WHERE vendorID = %s"
-        cursor.execute(sql, (badge_json, vendorID))
+        badge_json = json.dumps(badge_name, ensure_ascii=False)
+        cursor.execute(sql, (badge_name, vendorID))
         print(f"Rows affected: {cursor.rowcount}")
         conn.commit()
         cursor.close()
-        
+        print(type(badge_name))
         es.update(
             index=INDEX_NAME,
-            id=vendorID,  
+            id=vendorID,
             body={
                 "doc": {
-                    "badges": badge_name,
+                    "shop_name":shop_name,
+                    "badges": badge_name,  # not badge_json
+                    "shop_name_syllables": syllable_tokenize(shop_name)
                 }
             }
         )
-
+        print(badge_name)
         return jsonify({"message": "Badges added successfully"}), 201
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
