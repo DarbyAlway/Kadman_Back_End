@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from db import get_connection # Import db
+from db import wait_for_db_connection # Import db
 import json 
 from pythainlp.tokenize import syllable_tokenize
 from elasticsearch import Elasticsearch
@@ -18,7 +18,7 @@ es = Elasticsearch(
 )
 
 INDEX_NAME = "kadman"  
-conn = get_connection()  # Get database connection
+conn = wait_for_db_connection()  # Get database connection
 
 # Update vendors badges
 @vendors_bp.route("/update_badges",methods=["POST"])
@@ -35,7 +35,7 @@ def update_badges():
         # Save to MySQL
         sql = "UPDATE vendors SET badges = %s WHERE vendorID = %s"
         badge_json = json.dumps(badge_name, ensure_ascii=False)
-        cursor.execute(sql, (badge_name, vendorID))
+        cursor.execute(sql, (badge_json, vendorID))
         print(f"Rows affected: {cursor.rowcount}")
         conn.commit()
         cursor.close()
