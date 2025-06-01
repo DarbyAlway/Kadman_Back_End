@@ -7,7 +7,7 @@ import re
 import os
 from dotenv import load_dotenv
 from flask import Response
-from Indexing import index_vendors
+
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
 ES_KEY = os.getenv('ES_KEY')
@@ -16,6 +16,7 @@ es = Elasticsearch(
     basic_auth=("elastic", os.getenv('ELASTIC_PASSWORD', ES_KEY)),
     ca_certs=os.path.expanduser("~/http_ca.crt") 
 )
+
 INDEX_NAME = "kadman"  
 conn = get_connection()  # Get database connection
 
@@ -28,14 +29,27 @@ def update_badges():
         # Get json from request
         data = request.get_json()
         vendorID = data.get("vendorID")
+        shop_name = data.get("shop_name")
         badge_name = data.get("badges")
-        badge_json = json.dumps(badge_name, ensure_ascii=False)
-        
+        badge_json = json.dumps(badge_name, ensure_ascii=False)   
         print("vendors:", vendorID, badge_json)
+
         sql = "UPDATE vendors SET badges = %s WHERE vendorID = %s"
         cursor.execute(sql, (badge_json, vendorID))
+        print(f"Rows affected: {cursor.rowcount}")
         conn.commit()
         cursor.close()
+        
+        es.update(
+            index=INDEX_NAME,
+            id=vendorID,  
+            body={
+                "doc": {
+                    "badges": badge_name,
+                }
+            }
+        )
+
         return jsonify({"message": "Badges added successfully"}), 201
     
     except Exception as e:
@@ -83,7 +97,7 @@ def search():
         result = es.search(index=INDEX_NAME, body=query_body, size=200)
         hits = result.get("hits", {}).get("hits", [])
         results = [hit["_source"] for hit in hits]
-
+        results = sorted(results, key=lambda x: x.get("vendorID"))
         return Response(
             json.dumps(results, ensure_ascii=False),
             content_type="application/json"
@@ -123,7 +137,6 @@ def delete_selected_badges():
             return jsonify({"error": "vendorID and list of badges are required"}), 400
 
         cursor = conn.cursor()
-        cursor.execute("SET NAMES utf8mb4;")
 
         # Get current badges
         cursor.execute("SELECT badges FROM vendors WHERE vendorID = %s", (vendorID,))
@@ -141,12 +154,24 @@ def delete_selected_badges():
         cursor.execute("UPDATE vendors SET badges = %s WHERE vendorID = %s", (updated_json, vendorID))
         conn.commit()
         cursor.close()
+ # Re-index this vendor in Elasticsearch with updated badges
+
+        es.index(
+            index=INDEX_NAME,
+            id=vendorID,  # Use vendorID as the document ID
+            body={
+                "vendorID": vendorID,
+                "badges": updated_badges,
+            }
+        )
 
         return jsonify({"message": "Selected badges removed", "badges left": updated_badges}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
+# Add a new vendors to the database
 @vendors_bp.route("/add_vendors", methods=["POST"])
 def add_vendors():
     try:
@@ -158,9 +183,22 @@ def add_vendors():
         cursor = conn.cursor()
         sql = "INSERT INTO vendors (shop_name, badges) VALUES (%s, %s)"
         cursor.execute(sql, (shop_name, badge_json))
+        vendor_id = cursor.lastrowid  # Get the last inserted vendor ID
+        print("New vendor ID:", vendor_id)
         conn.commit()
         cursor.close()
-        index_vendors(es,conn)  # Re-index after adding a new vendor
+
+        # Indexing new vendor in Elasticsearch
+        es.index(
+            index=INDEX_NAME,
+            id = vendor_id,
+            body={
+                "vendorID": vendor_id,
+                "shop_name": shop_name,
+                "badges": badges,
+                "shop_name_syllables": syllable_tokenize(shop_name)
+            }
+        )
 
         return jsonify({"message": "Vendor added successfully"}), 201
     except Exception as e:
