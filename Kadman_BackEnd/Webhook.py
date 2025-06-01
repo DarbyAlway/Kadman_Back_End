@@ -1,7 +1,8 @@
+# Need to run this file first before using the LineOA Webhook
 from flask import Flask, request
-
 app = Flask(__name__)
-
+# Webhhook route for interact with KADMAN Account
+# Will recieve the user ID from the webhook
 @app.route('/webhook', methods=['POST'])
 def webhook():
     body = request.json

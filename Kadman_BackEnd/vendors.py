@@ -98,7 +98,7 @@ def get_all_vendors():
     try:
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM vendors")
+        cursor.execute("SELECT * FROM vendors") #Query to get all vendors
         results = cursor.fetchall()
 
         cursor.close()
