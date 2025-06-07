@@ -30,7 +30,6 @@ def update_badges():
         vendorID = data.get("vendorID")
         badge_name = data.get("badges")  # this is already a Python list
         shop_name = data.get("shop_name")
-        
 
         # Save to MySQL
         sql = "UPDATE vendors SET badges = %s WHERE vendorID = %s"

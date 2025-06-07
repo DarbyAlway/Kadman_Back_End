@@ -53,5 +53,6 @@ def insert_waiting_vendor(user_id, user_profile):
         cursor.close()
         conn.close()
 
+
 if __name__ == '__main__':
     app.run(port=5000)
