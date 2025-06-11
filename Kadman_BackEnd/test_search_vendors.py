@@ -24,6 +24,7 @@ def test_search_with_query(monkeypatch, client):
             ]
         }
     }
+    
     mock_es.search.return_value = mock_response
 
     # Patch the global 'es' variable inside vendors module to use the mock

@@ -56,7 +56,7 @@ def add_selected_waiting_vendors():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 @waiting_vendors_bp.route("/add_to_real_vendors",methods=["POST"])
 def add_to_real_vendors():
     '''
@@ -74,6 +74,7 @@ def add_to_real_vendors():
 
     if not all([shopname, phone_number, user_profile]):
         return jsonify({"message": "Missing required fields: shopname, phone_number, UserProfile", "success": False}), 400
+    
     # Convert badges to a JSON string if it's not None, otherwise set to None
     # MySQL JSON type will handle conversion if passed as a Python object,
     # but explicitly converting can be safer if there are issues.
