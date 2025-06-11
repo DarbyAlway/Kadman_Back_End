@@ -83,3 +83,26 @@ def insert_layout():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@layouts_bp.route("/delete_layout/<int:id>", methods=["DELETE"])
+def delete_layout(id):
+    try:
+        cursor = conn.cursor()
+        
+        # First, check if the layout exists
+        cursor.execute("SELECT id FROM layouts WHERE id = %s", (id,))
+        existing_layout = cursor.fetchone()
+
+        if not existing_layout:
+            cursor.close()
+            return jsonify({"error": f"Layout with ID {id} not found"}), 404
+
+        # If it exists, proceed with deletion
+        cursor.execute("DELETE FROM layouts WHERE id = %s", (id,))
+        conn.commit()
+        cursor.close()
+
+        return jsonify({"message": f"Layout with ID {id} deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
