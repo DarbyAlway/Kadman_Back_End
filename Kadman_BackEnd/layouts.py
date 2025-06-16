@@ -2,7 +2,12 @@ from flask import Blueprint, jsonify, request,current_app,Response
 import json 
 from mysql.connector import Error
 from db import get_db_connection
+import requests
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+CHANNEL_ACCESS_TOKEN = os.getenv('LineOA_KEY')
 layouts_bp = Blueprint('layouts', __name__) 
 
 @layouts_bp.route("/show_all_layouts", methods=["GET"])
@@ -111,13 +116,11 @@ def delete_layout(id):
 
 #Testing Layouts only 
 
-@layouts_bp.route("/send_notification/<int:id>", methods=["GET"])  # Need to be layout ID
+@layouts_bp.route("/send_notification/<int:id>", methods=["GET"])
 def send_notification(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-
-        # Step 1: Get layout data
         cursor.execute("SELECT data FROM layouts WHERE id = %s", (id,))
         row = cursor.fetchone()
 
@@ -125,29 +128,61 @@ def send_notification(id):
             return jsonify({"error": f"Layout with ID {id} not found"}), 404
 
         layout_data = json.loads(row[0])
+        results = []
 
-        result = []
-
-        # Step 2: Extract vendorIDs and get lineID for each
         for slot, value in layout_data.items():
             if isinstance(value, dict) and "vendorID" in value:
                 vendor_id = value["vendorID"]
-
-                # Step 3: Query vendors table for LineID
                 cursor.execute("SELECT lineID FROM vendors WHERE vendorID = %s", (vendor_id,))
                 vendor_row = cursor.fetchone()
+                if vendor_row and vendor_row[0]:
+                    line_user_id = vendor_row[0]
+                    message_text = f"Notification for layout ID {id} - Slot {slot} \n ⚠️⚠️(This is Send Batch Notification demo. Attendance feature will be implement in progress 2)⚠️⚠️"
 
-                if vendor_row:
-                    line_id = vendor_row[0]
-                    result.append({
+                    status_code, response_text = send_line_multicast([line_user_id], message_text)
+                    results.append({
                         "slot": slot,
                         "vendorID": vendor_id,
-                        "lineID": line_id
+                        "lineID": line_user_id,
+                        "notification_status": status_code,
+                        "notification_response": response_text
+                    })
+                else:
+                    results.append({
+                        "slot": slot,
+                        "vendorID": vendor_id,
+                        "lineID": None,
+                        "notification_status": "skipped",
+                        "notification_response": "No LINE user ID found"
                     })
 
         cursor.close()
-        return jsonify(result), 200
+        return jsonify(results), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
+def send_line_notify(token, message):
+    url = "https://notify-api.line.me/api/notify"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    payload = {"message": message}
+    response = requests.post(url, headers=headers, data=payload)
+    return response.status_code, response.text
+
+def send_line_multicast(user_ids, message_text):
+    url = 'https://api.line.me/v2/bot/message/multicast'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {CHANNEL_ACCESS_TOKEN}'
+    }
+    payload = {
+        "to": user_ids,
+        "messages": [{"type": "text", "text": message_text}]
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    return response.status_code, response.text
