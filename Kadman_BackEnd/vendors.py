@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from db import wait_for_db_connection # Import db
+from db import get_db_connection
 import json 
 from pythainlp.tokenize import syllable_tokenize
 from elasticsearch import Elasticsearch
@@ -18,11 +18,11 @@ es = Elasticsearch(
 )
 
 INDEX_NAME = "kadman"  
-conn = wait_for_db_connection()  # Get database connection
 
 # Update vendors badges
 @vendors_bp.route("/update_badges",methods=["POST"])
 def update_badges():
+    conn = get_db_connection()
     try:
         cursor = conn.cursor()
 
@@ -110,6 +110,7 @@ def search():
 # return all vendors info from the database
 @vendors_bp.route("/get_all_vendors", methods=["GET"])
 def get_all_vendors():
+    conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
 
@@ -129,6 +130,7 @@ def get_all_vendors():
 # Delete selected badges from a vendors table
 @vendors_bp.route("/delete_selected_badges", methods=["POST"])
 def delete_selected_badges():
+    conn = get_db_connection()
     try:
         data = request.get_json()
         vendorID = data.get("vendorID")
@@ -175,6 +177,7 @@ def delete_selected_badges():
 # Add a new vendors to the database
 @vendors_bp.route("/add_vendors", methods=["POST"])
 def add_vendors():
+    conn = get_db_connection()
     try:
         data = request.get_json()
         shop_name = data.get("shop_name")

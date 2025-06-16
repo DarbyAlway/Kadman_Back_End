@@ -1,14 +1,14 @@
 from flask import Blueprint, jsonify, request
-from db import wait_for_db_connection # Import db
+from db import get_db_connection
 import json 
 from flask import Response
 from mysql.connector import Error
 
 waiting_vendors_bp = Blueprint('waiting_vendors', __name__) 
-conn = wait_for_db_connection()
 
 @waiting_vendors_bp.route("/show_all_waiting_vendors", methods=["GET"])
 def show_all_waiting_vendors():
+    conn = get_db_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM waiting_vendors")
@@ -27,6 +27,7 @@ def show_all_waiting_vendors():
 
 @waiting_vendors_bp.route("/add_selected_waiting_vendors", methods=["POST"])
 def add_selected_waiting_vendors():
+    conn = get_db_connection()
     try:
         data = request.json  # Expecting: {"line_ids": ["id1", "id2", ...]}
         line_ids = data.get("line_ids", [])
@@ -63,6 +64,8 @@ def add_to_real_vendors():
     Add to real vendors table.
     Expects JSON data with 'shopname', 'phone_number', 'badges', and 'UserProfile'.
     '''
+    conn = get_db_connection()
+    
     if not request.is_json:
         return jsonify({"message": "Request must be JSON", "success": False}), 400
 

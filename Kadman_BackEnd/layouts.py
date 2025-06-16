@@ -1,15 +1,15 @@
-from flask import Blueprint, jsonify, request
-from db import wait_for_db_connection # Import db
+from flask import Blueprint, jsonify, request,current_app,Response
 import json 
-from flask import Response
 from mysql.connector import Error
+from db import get_db_connection
 
 layouts_bp = Blueprint('layouts', __name__) 
-conn = wait_for_db_connection()
+
 
 @layouts_bp.route("/show_all_layouts", methods=["GET"])
 def show_all_layouts():
     try:
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM layouts")
         rows = cursor.fetchall()
@@ -31,6 +31,7 @@ def show_all_layouts():
 
 @layouts_bp.route("/update_layout/<int:id>", methods=["PUT"])
 def update_layout(id):
+    conn = get_db_connection()
     try:
         data = request.get_json()
 
@@ -58,6 +59,7 @@ def update_layout(id):
 
 @layouts_bp.route("/insert_layout", methods=["POST"])
 def insert_layout():
+    conn = get_db_connection()
     try:
         data = request.get_json()
 
@@ -86,6 +88,7 @@ def insert_layout():
 
 @layouts_bp.route("/delete_layout/<int:id>", methods=["DELETE"])
 def delete_layout(id):
+    conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
@@ -106,3 +109,36 @@ def delete_layout(id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+#Testing Layouts only 
+
+@layouts_bp.route("/send_notification/<int:id>", methods=["GET"])  # Need to be layout ID
+def send_notification(id):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT data FROM layouts WHERE id = %s", (id,))
+        row = cursor.fetchone()
+
+        if not row:
+            return jsonify({"error": f"Layout with ID {id} not found"}), 404
+
+        layout_data = json.loads(row[0])
+
+        result = []
+        for slot, value in layout_data.items():
+            if isinstance(value, dict) and "vendorID" in value:
+                result.append({
+                    "slot": slot,
+                    "vendorID": value["vendorID"]
+            })
+
+
+
+
+        cursor.close()
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
