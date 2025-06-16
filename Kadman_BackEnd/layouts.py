@@ -5,7 +5,6 @@ from db import get_db_connection
 
 layouts_bp = Blueprint('layouts', __name__) 
 
-
 @layouts_bp.route("/show_all_layouts", methods=["GET"])
 def show_all_layouts():
     try:
@@ -114,9 +113,11 @@ def delete_layout(id):
 
 @layouts_bp.route("/send_notification/<int:id>", methods=["GET"])  # Need to be layout ID
 def send_notification(id):
-    conn = get_db_connection()
     try:
+        conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Step 1: Get layout data
         cursor.execute("SELECT data FROM layouts WHERE id = %s", (id,))
         row = cursor.fetchone()
 
@@ -126,15 +127,23 @@ def send_notification(id):
         layout_data = json.loads(row[0])
 
         result = []
+
+        # Step 2: Extract vendorIDs and get lineID for each
         for slot, value in layout_data.items():
             if isinstance(value, dict) and "vendorID" in value:
-                result.append({
-                    "slot": slot,
-                    "vendorID": value["vendorID"]
-            })
+                vendor_id = value["vendorID"]
 
+                # Step 3: Query vendors table for LineID
+                cursor.execute("SELECT lineID FROM vendors WHERE vendorID = %s", (vendor_id,))
+                vendor_row = cursor.fetchone()
 
-
+                if vendor_row:
+                    line_id = vendor_row[0]
+                    result.append({
+                        "slot": slot,
+                        "vendorID": vendor_id,
+                        "lineID": line_id
+                    })
 
         cursor.close()
         return jsonify(result), 200

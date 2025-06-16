@@ -13,7 +13,7 @@ user_ids = [
 
 message = {
     "type": "text",
-    "text": "พี่จ๋าน้ำจะแตก"
+    "text": "This is a test notification"
 }
 
 url = 'https://api.line.me/v2/bot/message/multicast'
