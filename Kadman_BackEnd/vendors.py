@@ -7,7 +7,7 @@ import re
 import os
 from dotenv import load_dotenv
 from flask import Response
-
+import traceback
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
 ES_KEY = os.getenv('ES_KEY')
@@ -58,12 +58,11 @@ def update_badges():
 
 
 
-# Search for vendors
+
 @vendors_bp.route("/search", methods=["GET"])
 def search():
     query_text = request.args.get("q", "")
     cleaned_query = re.sub(r'["\'\s]+', '', query_text)
-
 
     if cleaned_query and cleaned_query != "":
         query_syllables = syllable_tokenize(cleaned_query)
@@ -87,7 +86,6 @@ def search():
             }
         }
     else:
-        # Match all documents when query is empty
         query_body = {
             "query": {
                 "match_all": {}
@@ -105,7 +103,10 @@ def search():
         )
 
     except Exception as e:
+        print("Exception in /search route:", e)
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 # return all vendors info from the database
 @vendors_bp.route("/get_all_vendors", methods=["GET"])

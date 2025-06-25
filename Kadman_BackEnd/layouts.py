@@ -161,17 +161,6 @@ def send_notification(id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-
-def send_line_notify(token, message):
-    url = "https://notify-api.line.me/api/notify"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    payload = {"message": message}
-    response = requests.post(url, headers=headers, data=payload)
-    return response.status_code, response.text
 
 def send_line_multicast(user_ids, message_text):
     url = 'https://api.line.me/v2/bot/message/multicast'
