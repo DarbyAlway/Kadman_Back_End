@@ -47,10 +47,10 @@ def test_update_layout_using_mock_json(mock_get_db, client):
 
     # Make sure the query was executed
     mock_cursor.execute.assert_called_once()
-    args = mock_cursor.execute.call_args[0]
+    args = mock_cursor.execute.call_args[0] # query from fake cursor
 
     expected_query = "UPDATE layouts SET name = %s, data = %s WHERE id = %s"
-    assert args[0] == expected_query
+    assert args[0] == expected_query # Check query from real cursor and fake cursor
     assert args[1][0] == updated_layout["name"]
     assert json.loads(args[1][1]) == updated_layout["data"]  # stringified JSON was passed
     assert args[1][2] == layout_id
