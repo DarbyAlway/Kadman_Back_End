@@ -116,7 +116,7 @@ def delete_layout(id):
 
 #Testing Layouts only 
 
-@layouts_bp.route("/send_notification/<int:id>", methods=["GET"])
+@layouts_bp.route("/send_notification/<int:id>", methods=["GET"]) # id = layout ID
 def send_notification(id):
     try:
         conn = get_db_connection()
