@@ -1,10 +1,6 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-import sys
-import os
-
-
 from app import app
 
 @pytest.fixture
@@ -47,3 +43,21 @@ def test_update_badges(mock_tokenize, mock_es, mock_get_db, client):
 
     # ES check
     mock_es.update.assert_called_once()
+    mock_tokenize.assert_called_once_with("Test Shop")
+
+
+    # Indexing Test
+    args,kwargs = mock_es.update.call_args
+    # args = position arguments  (like ["abc", 1, {...}])
+    # kwargs = keyword arguments (like {"index": "abc", "id": 1, "body": {...}})
+
+    assert 'id' in kwargs # The call must have id  in kwargs 
+    assert 'body' in kwargs  # The call must have body  in kwargs
+    # Or if kwargs:
+    assert kwargs.get('index') == "kadman" 
+    assert kwargs.get('id') == request_data["vendorID"]
+    body = kwargs.get('body')
+    assert body is not None
+    assert "doc" in body
+    assert body["doc"]["badges"] == request_data["badges"]
+    assert body["doc"]["shop_name"] == request_data["shop_name"]

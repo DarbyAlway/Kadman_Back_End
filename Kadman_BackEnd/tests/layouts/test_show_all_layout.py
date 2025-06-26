@@ -12,7 +12,7 @@ def client():
 @patch("layouts.get_db_connection")
 def test_show_all_layouts_from_json_file(mock_get_db, client):
     # 1. Load JSON from file
-    json_path = Path("mocks/layouts_dump.json")
+    json_path = Path(__file__).parent / "mocks" / "layouts_dump.json"
     with json_path.open(encoding="utf-8") as f:
         json_data = json.load(f)
 

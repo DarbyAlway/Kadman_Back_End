@@ -12,7 +12,7 @@ def client():
 @patch("layouts.get_db_connection")
 def test_insert_layout_with_old_and_new_mock_data(mock_get_db, client):
     # Load old layouts (existing data)
-    json_path = Path(__file__).parent.parent / "mocks" / "layouts_dump.json"
+    json_path = Path(__file__).parent / "mocks" / "layouts_dump.json"
     with json_path.open(encoding="utf-8") as f:
         old_layouts = json.load(f)
 

@@ -13,7 +13,7 @@ def client():
 @patch("layouts.get_db_connection")
 def test_send_notification_with_mock_json(mock_get_db, mock_send_line, client):
     # Load mock layout data from JSON file
-    json_path = Path("mocks/layouts_dump.json")
+    json_path = Path(__file__).parent / "mocks" / "layouts_dump.json"
     with json_path.open(encoding="utf-8") as f:
         layouts = json.load(f)
 

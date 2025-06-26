@@ -12,7 +12,7 @@ def client():
 @patch("vendors.es")
 @patch("vendors.get_db_connection")
 @patch("vendors.syllable_tokenize")
-def test_add_vendors(mock_tokenize, mock_get_db, mock_es, mock_index_name, client):
+def test_add_vendors(mock_tokenize, mock_get_db, mock_es, client):
     # Input data with Thai values
     request_data = {
         "shop_name": "ร้านน่ารัก",
@@ -49,7 +49,7 @@ def test_add_vendors(mock_tokenize, mock_get_db, mock_es, mock_index_name, clien
     mock_conn.commit.assert_called_once()
     mock_cursor.close.assert_called_once()
 
-    # ✅ Check Elasticsearch index
+    #  Check Elasticsearch indexing
     mock_es.index.assert_called_once_with(
         index="kadman",  # or patch INDEX_NAME
         id=10,

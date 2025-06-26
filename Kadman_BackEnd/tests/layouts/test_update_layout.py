@@ -12,7 +12,7 @@ def client():
 @patch("layouts.get_db_connection")
 def test_update_layout_using_mock_json(mock_get_db, client):
     # Load mock json
-    json_path = Path("mocks/layouts_dump.json")
+    json_path = Path(__file__).parent / "mocks" / "layouts_dump.json"
     with json_path.open(encoding="utf-8") as f:
         layouts = json.load(f)
 

@@ -11,8 +11,7 @@ def client():
 @patch("vendors.es")
 @patch("vendors.get_db_connection")
 def test_delete_selected_badges(mock_get_db, mock_es, client):
-    from vendors import INDEX_NAME  # 🧠 import inside the test (optional for clarity)
-
+    # Mock data for for deletion
     request_data = {
         "vendorID": 1,
         "badges": ["เสื้อผ้า", "ร้านค้าแนะนำ"]
