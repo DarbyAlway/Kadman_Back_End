@@ -32,8 +32,6 @@ def test_insert_layout_with_old_and_new_mock_data(mock_get_db, client):
     mock_conn.cursor.return_value = mock_cursor
     mock_get_db.return_value = mock_conn
 
-    # (Optional) You can log or check old_layouts if you want to confirm your test sees them
-    # print(f"Old layouts count: {len(old_layouts)}")
 
     # Send POST request to insert new layout
     response = client.post(

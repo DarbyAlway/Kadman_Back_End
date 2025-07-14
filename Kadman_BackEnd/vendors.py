@@ -11,6 +11,7 @@ import traceback
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
 ES_KEY = os.getenv('ES_KEY')
+
 es = Elasticsearch(
     "https://localhost:9200",
     basic_auth=("elastic", os.getenv('ELASTIC_PASSWORD', ES_KEY)),

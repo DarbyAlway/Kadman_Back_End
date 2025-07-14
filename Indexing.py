@@ -6,7 +6,7 @@ import json
 from dotenv import load_dotenv
 # Step 1: Connect to AWS Aurora (MySQL-compatible)
 conn = mysql.connector.connect(
-    host="kadman-aurora-db-instance-1.clq6qs624meb.ap-southeast-2.rds.amazonaws.com",
+    host="kadman-database.c8boumioc8hx.us-east-1.rds.amazonaws.com",
     user="admin",
     password="12345678",
     database="kadmandb",
