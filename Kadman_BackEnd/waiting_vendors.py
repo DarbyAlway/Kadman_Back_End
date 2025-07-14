@@ -21,7 +21,10 @@ def show_all_waiting_vendors():
             }
             vendors.append(vendor)
         cursor.close()
-        return jsonify(vendors), 200
+        return jsonify({
+            "message": "Successfully retrieved waiting vendors",
+            "data": vendors
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -31,9 +34,6 @@ def add_selected_waiting_vendors():
     try:
         data = request.json  # Expecting: {"line_ids": ["id1", "id2", ...]}
         line_ids = data.get("line_ids", [])
-        
-        if not line_ids:
-            return jsonify({"error": "No line_ids provided"}), 400
 
         cursor = conn.cursor()
 
