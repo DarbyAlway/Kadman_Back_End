@@ -209,3 +209,20 @@ def add_vendors():
         return jsonify({"message": "Vendor added successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@vendors_bp.route("/increase_attendance",method=["POST"])
+def increase_num_of_attendance():
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        vendorID = data.get("vendorID")
+        cur = conn.cursor()
+        cur.execute("UPDATE vendors SET attendance = attendance + 1 WHERE id = %s", (vendorID,))
+        conn.commit
+        
+        return {"message":"Attendance updated successfully"},200
+    except Exception as e:
+        return {"error": str(e)}, 500
+    finally:
+        conn.close()
+
