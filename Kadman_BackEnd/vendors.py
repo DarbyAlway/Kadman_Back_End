@@ -210,6 +210,7 @@ def add_vendors():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+# increase attendance  with specific vendorID    
 @vendors_bp.route("/increase_attendance",methods=["POST"])
 def increase_num_of_attendance():
     conn = get_db_connection()
@@ -225,7 +226,7 @@ def increase_num_of_attendance():
         return {"error": str(e)}, 500
     finally:
         conn.close()
-
+# decrease attendance with specific vendorID
 @vendors_bp.route("/decrease_attendance",methods=["POST"])
 def decrease_num_of_attendance():
     conn = get_db_connection()
@@ -239,5 +240,20 @@ def decrease_num_of_attendance():
         return {"message":"Attendance decreased successfully"},200
     except Exception as e:
         return {"error": str(e)}, 500
+    finally:
+        conn.close()
+
+# reset all of attendance
+@vendors_bp.route("/reset_attendance",methods=["POST"])
+def reset_attendance():
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE vendors SET attendance = 3")
+        conn.commit()
+        return {"message":"all of vendor's attendance reset to 3 successfully"},200
+    
+    except Exception as e:
+        return {"error":str(e)},500
     finally:
         conn.close()
