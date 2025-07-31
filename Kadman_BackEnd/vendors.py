@@ -220,9 +220,24 @@ def increase_num_of_attendance():
         cur.execute("UPDATE vendors SET attendance = attendance + 1 WHERE vendorID = %s", (vendorID,))
         conn.commit
         
-        return {"message":"Attendance updated successfully"},200
+        return {"message":"Attendance increased successfully"},200
     except Exception as e:
         return {"error": str(e)}, 500
     finally:
         conn.close()
 
+@vendors_bp.route("/decrease_attendance",methods=["POST"])
+def decrease_num_of_attendance():
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        vendorID = data.get("vendorID")
+        cur = conn.cursor()
+        cur.execute("UPDATE vendors SET attendance = attendance - 1 WHERE vendorID = %s", (vendorID,))
+        conn.commit
+        
+        return {"message":"Attendance decreased successfully"},200
+    except Exception as e:
+        return {"error": str(e)}, 500
+    finally:
+        conn.close()
