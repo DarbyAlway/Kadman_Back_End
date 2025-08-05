@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Attendance LIFF App</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h2>Attendance Check</h2>
+  <p id="status">Loading...</p>
+
+  <script>
+    const liffId = "2007876163-7dLrAMJr"; // Replace with your LIFF ID
+
+    async function main() {
+      await liff.init({ liffId });
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return; // after login, LIFF app reloads
+      }
+
+      try {
+        const profile = await liff.getProfile();
+        document.getElementById('status').textContent = `Hello, ${profile.displayName}! Checking attendance...`;
+
+        // Send userId to your backend
+        const response = await fetch('https://33756b544304.ngrok-free.app/check_attendance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: profile.userId, displayName: profile.displayName })
+        });
+        
+        if (response.ok) {
+          document.getElementById('status').textContent = 'Attendance checked successfully. Thank you!';
+        } else {
+          document.getElementById('status').textContent = 'Failed to check attendance.';
+        }
+
+      } catch (error) {
+        document.getElementById('status').textContent = 'Error getting profile: ' + error.message;
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>

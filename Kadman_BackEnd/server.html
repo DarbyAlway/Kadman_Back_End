@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple LINE LIFF App</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  </head>
+  <body>
+    <h1>Welcome to LINE LIFF App</h1>
+    <button id="btnProfile">Check Attendance</button>
+    <pre id="profile"></pre>
+
+    <script>
+      const liffId = '2007876163-7dLrAMJr'; // Replace with your LIFF ID
+
+      async function main() {
+        await liff.init({ liffId });
+
+        if (!liff.isLoggedIn()) {
+          liff.login(); // LINE will reload the app after login
+          return;
+        }
+
+        document.getElementById('btnProfile').onclick = async () => {
+          try {
+            const profile = await liff.getProfile();
+            document.getElementById('profile').textContent = JSON.stringify(profile, null, 2);
+
+            // Send to your Flask route
+            const response = await fetch('/check_attendance', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: profile.userId,
+                displayName: profile.displayName
+              })
+            });
+
+            const result = await response.json();
+            alert(result.message || 'Done');
+          } catch (err) {
+            alert('Error: ' + err.message);
+          }
+        };
+      }
+
+      main();
+    </script>
+  </body>
+</html>

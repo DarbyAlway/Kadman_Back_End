@@ -226,6 +226,7 @@ def increase_num_of_attendance():
         return {"error": str(e)}, 500
     finally:
         conn.close()
+        
 # decrease attendance with specific vendorID
 @vendors_bp.route("/decrease_attendance",methods=["POST"])
 def decrease_num_of_attendance():
@@ -257,3 +258,23 @@ def reset_attendance():
         return {"error":str(e)},500
     finally:
         conn.close()
+
+# Check attendance 
+@vendors_bp.route("/check_attendance",methods=['POST'])
+def check_attendance():
+    try:
+        data = request.get_json()
+        print("Received JSON:", data)
+
+        user_id = data.get('userId')
+        display_name = data.get('displayName')
+
+        if not user_id:
+            return jsonify({'error': 'Missing userId'}), 400
+
+        print(f"✅ Attendance checked: {display_name} ({user_id})")
+        return jsonify({'message': 'Attendance recorded'}), 200
+
+    except Exception as e:
+        print("❌ Error in /attendance:", str(e))
+        return jsonify({'error': 'Server error'}), 500

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-CHANNEL_ACCESS_TOKEN = os.getenv('LineOA_KEY')
+CHANNEL_ACCESS_TOKEN = os.getenv('LineOA_Key')
 layouts_bp = Blueprint('layouts', __name__) 
 
 @layouts_bp.route("/show_all_layouts", methods=["GET"])
@@ -135,9 +135,10 @@ def send_notification(id):
                 vendor_id = value["vendorID"]
                 cursor.execute("SELECT lineID FROM vendors WHERE vendorID = %s", (vendor_id,))
                 vendor_row = cursor.fetchone()
+                attendance_url = 'https://33756b544304.ngrok-free.app'
                 if vendor_row and vendor_row[0]:
                     line_user_id = vendor_row[0]
-                    message_text = f"Notification for layout ID {id} - Slot {slot} \n ⚠️⚠️(This is Send Batch Notification demo. Attendance feature will be implement in progress 2)⚠️⚠️"
+                    message_text = f"for checking attendance https://33756b544304.ngrok-free.app"
 
                     status_code, response_text = send_line_multicast([line_user_id], message_text)
                     results.append({
