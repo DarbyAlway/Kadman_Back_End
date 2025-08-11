@@ -70,8 +70,9 @@ def insert_layout():
         layout_name = data.get("name")
         layout_data = data.get("data")
 
-        if layout_name is None or layout_data is None:
-            return jsonify({"error": "Missing 'name' or 'data'"}), 400
+        # Add key 'status' into the json data 
+        for _ , vendor_info in layout_data.items():
+            vendor_info['status'] = ""
 
         # Convert layout_data to JSON string
         layout_data_str = json.dumps(layout_data, ensure_ascii=False)
@@ -116,8 +117,9 @@ def delete_layout(id):
 
 #Testing Layouts only 
 
-@layouts_bp.route("/send_notification/<int:id>", methods=["GET"]) # id = layout ID
-def send_notification(id):
+# Begin attendance check for every vendors
+@layouts_bp.route("/begin_attendance/<int:id>", methods=["GET"]) # id = layout ID
+def begin_attendance(id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -146,8 +148,10 @@ def send_notification(id):
                         "vendorID": vendor_id,
                         "lineID": line_user_id,
                         "notification_status": status_code,
-                        "notification_response": response_text
+                        "notification_response": response_text,
+                        
                     })
+
                 else:
                     results.append({
                         "slot": slot,
@@ -157,11 +161,48 @@ def send_notification(id):
                         "notification_response": "No LINE user ID found"
                     })
 
+        change_all_status_to_pending_attendance(id,conn,cursor)
+        activate_layout_status(id,conn,cursor)
         cursor.close()
         return jsonify(results), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+def activate_layout_status(id,conn,cursor):
+
+    try:
+        # Update the status column to 'active' for the given layout id
+        cursor.execute("UPDATE layouts SET status = %s WHERE id = %s", ("active", id))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": f"No layout found with id={id}"}), 404
+
+        return jsonify({"message": f"Layout id={id} status updated to 'active'."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+def deactivate_layout_status(id,conn,cursor):
+    try:
+        cursor.execute("UPDATE layouts SET status = %s WHERE id = %s", ("inactive", id))
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": f"No layout found with id={id}"}), 404
+
+        return jsonify({"message": f"Layout id={id} status updated to 'inactive'."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 
 def send_line_multicast(user_ids, message_text):
     url = 'https://api.line.me/v2/bot/message/multicast'
@@ -176,3 +217,40 @@ def send_line_multicast(user_ids, message_text):
 
     response = requests.post(url, headers=headers, json=payload)
     return response.status_code, response.text
+
+
+# Change all vendor's status in layout table to 'pending' 
+def change_all_status_to_pending_attendance(id,conn,cursor):
+    cursor.execute("SELECT data FROM layouts WHERE id = %s", (id,))
+    row = cursor.fetchone()
+    if row:
+        data_json = row[0]
+        data = json.loads(data_json)
+        for _ , vendor_info in data.items():
+            vendor_info['status'] = "pending attendance"  # <-- here
+        new_json_str = json.dumps(data, ensure_ascii=False)
+        cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (new_json_str, 3))
+        conn.commit()
+        print("Updated data with 'status' set to 'pending attendance'.")
+
+    else:
+        print(f"No record with {id} found.")
+
+
+# Change all vendor's status in layout table to 'pending payment' already check 
+def change_all_status_to_pending_payment(id,conn,cursor):
+    cursor.execute("SELECT data FROM layouts WHERE id = %s", (id,))
+    row = cursor.fetchone()
+    if row:
+        data_json = row[0]
+        data = json.loads(data_json)
+        for _ , vendor_info in data.items():
+            vendor_info['status'] = "pending payment"
+        new_json_str = json.dumps(data, ensure_ascii=False)
+        cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (new_json_str, 3))
+        conn.commit()
+        print("Updated data with 'status' set to 'pending payment'.")
+
+    else:
+        print(f"No record with {id} found.")
+
