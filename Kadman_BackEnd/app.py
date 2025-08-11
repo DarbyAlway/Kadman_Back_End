@@ -8,16 +8,20 @@ import mysql.connector
 
 
 def create_app():
+    print('connecting to the database')
     app = Flask(__name__)
     CORS(app,supports_credentials=True)
-
-    connection = mysql.connector.connect(
-        host=os.getenv("MYSQL_HOST"),
-        user=os.getenv("MYSQL_USER"),
-        password=os.getenv("MYSQL_PASSWORD"),
-        database=os.getenv("MYSQL_DB"),
-        port=int(os.getenv("MYSQL_PORT", 3306))
-    )
+    try:
+        connection = mysql.connector.connect(
+            host=os.getenv("MYSQL_HOST"),
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DB"),
+            port=int(os.getenv("MYSQL_PORT", 3306))
+        )
+        print("MySQL connection established")
+    except Exception as e:
+        print("MySQL connection error:", e)
 
     app.db = connection
 
@@ -29,5 +33,4 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(debug=True,port=8080)

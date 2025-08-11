@@ -24,7 +24,7 @@
         document.getElementById('status').textContent = `Hello, ${profile.displayName}! Checking attendance...`;
 
         // Send userId to your backend
-        const response = await fetch('https://33756b544304.ngrok-free.app/check_attendance', {
+        const response = await fetch(' https://c8a2d7940bf4.ngrok-free.app/check_attendance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: profile.userId, displayName: profile.displayName })
