@@ -115,14 +115,15 @@ def delete_layout(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-#Testing Layouts only 
-
 # Begin attendance check for every vendors
-@layouts_bp.route("/begin_attendance/<int:id>", methods=["GET"]) # id = layout ID
+@layouts_bp.route("/begin_attendance/<int:id>", methods=["GET"])  # id = layout ID
 def begin_attendance(id):
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+
         cursor.execute("SELECT data FROM layouts WHERE id = %s", (id,))
         row = cursor.fetchone()
 
@@ -137,10 +138,11 @@ def begin_attendance(id):
                 vendor_id = value["vendorID"]
                 cursor.execute("SELECT lineID FROM vendors WHERE vendorID = %s", (vendor_id,))
                 vendor_row = cursor.fetchone()
-                attendance_url = 'https://33756b544304.ngrok-free.app'
                 if vendor_row and vendor_row[0]:
                     line_user_id = vendor_row[0]
-                    message_text = f"for checking attendance https://33756b544304.ngrok-free.app"
+                    # Send URL with layout_id as query param
+                    attendance_url = f"https://2d326c2dd4bd.ngrok-free.app/check_attendance?layout_id={id}"
+                    message_text = f"Please check your attendance here: {attendance_url}"
 
                     status_code, response_text = send_line_multicast([line_user_id], message_text)
                     results.append({
@@ -149,7 +151,6 @@ def begin_attendance(id):
                         "lineID": line_user_id,
                         "notification_status": status_code,
                         "notification_response": response_text,
-                        
                     })
 
                 else:
@@ -161,16 +162,23 @@ def begin_attendance(id):
                         "notification_response": "No LINE user ID found"
                     })
 
-        change_all_status_to_pending_attendance(id,conn,cursor)
-        activate_layout_status(id,conn,cursor)
-        cursor.close()
+        change_all_status_to_pending_attendance(id, conn, cursor)
+        activate_layout_status(id, conn, cursor)
+
+        conn.commit()
         return jsonify(results), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Error in begin_attendance: {e}")
+        return jsonify({"error": "Server error"}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 def activate_layout_status(id,conn,cursor):
-
     try:
         # Update the status column to 'active' for the given layout id
         cursor.execute("UPDATE layouts SET status = %s WHERE id = %s", ("active", id))
@@ -188,6 +196,7 @@ def activate_layout_status(id,conn,cursor):
         cursor.close()
         conn.close()
 
+# make the layout status be inactive
 def deactivate_layout_status(id,conn,cursor):
     try:
         cursor.execute("UPDATE layouts SET status = %s WHERE id = %s", ("inactive", id))

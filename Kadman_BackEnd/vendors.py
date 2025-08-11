@@ -260,21 +260,69 @@ def reset_attendance():
         conn.close()
 
 # Check attendance 
-@vendors_bp.route("/check_attendance",methods=['POST'])
-def check_attendance():
+@vendors_bp.route("/check_attendance/<int:layout_id>", methods=['POST'])
+def check_attendance(layout_id):
+    conn = None
+    cursor = None
+    print('checked attendance received')
     try:
         data = request.get_json()
-        print("Received JSON:", data)
+        if not data:
+            return jsonify({"error": "Request body must be JSON"}), 400
 
         user_id = data.get('userId')
         display_name = data.get('displayName')
         days = data.get('days')
-        if not user_id:
-            return jsonify({'error': 'Missing userId'}), 400
-        print(f"✅ Attendance checked: {display_name} ({user_id})")
-        return jsonify({'message': 'Attendance recorded'}), 200
+
+        if not user_id or not days:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Find vendor in layout by userId (assuming you map LINE userId to vendors.lineID)
+        # You may need to join vendors & layouts data or maintain a reverse map
+
+        # Example: find vendorID by lineID = user_id
+        cursor.execute("SELECT vendorID FROM vendors WHERE lineID = %s", (user_id,))
+        vendor_row = cursor.fetchone()
+        if not vendor_row:
+            return jsonify({"error": "Vendor not found for this userId"}), 404
+
+        vendor_id = vendor_row[0]
+
+        # Now update the layout data JSON to set this vendor's status to 'attended' or your desired status
+        cursor.execute("SELECT data FROM layouts WHERE id = %s", (layout_id,))
+        layout_row = cursor.fetchone()
+        if not layout_row:
+            return jsonify({"error": f"Layout ID {layout_id} not found"}), 404
+
+        layout_data = json.loads(layout_row[0])
+
+        # Update vendor status inside layout JSON
+        updated = False
+        for slot, value in layout_data.items():
+            if isinstance(value, dict) and value.get("vendorID") == vendor_id:
+                value["status"] = "attended"  # or "present"
+                updated = True
+                break
+
+        if not updated:
+            return jsonify({"error": "Vendor not found in layout"}), 404
+
+        # Save updated JSON back to DB
+        cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (json.dumps(layout_data), layout_id))
+        conn.commit()
+
+        print(f"✅ Attendance checked: {display_name} ({user_id}), layout {layout_id}")
+        return jsonify({"message": "Attendance recorded"}), 200
 
     except Exception as e:
-        print("❌ Error in /attendance:", str(e))
-        return jsonify({'error': 'Server error'}), 500
+        print("❌ Error in /check_attendance:", str(e))
+        return jsonify({"error": "Server error"}), 500
 
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
