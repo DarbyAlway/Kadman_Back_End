@@ -70,7 +70,7 @@
               "Sending attendance...";
             try {
               const response = await fetch(
-                ` https://c8a2d7940bf4.ngrok-free.app/check_attendance/${layoutId}`,
+                `https://c8a2d7940bf4.ngrok-free.app/check_attendance/${layoutId}`,
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -89,9 +89,9 @@
               } else {
                 document.getElementById("status").textContent =
                   "Failed to check attendance.";
-                response.text().then((text) => {
-                  console.error("Response body:", text);
-                });
+                  response.text().then(text => {
+      console.error("Response body:", text);
+    });
               }
             } catch (error) {
               document.getElementById("status").textContent =

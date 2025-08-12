@@ -290,8 +290,6 @@ def get_attendance(line_id):
         cursor.close()
         conn.close()
 
-
-
 # Check attendance 
 @vendors_bp.route("/check_attendance/<int:layout_id>", methods=['POST'])
 def check_attendance(layout_id):
