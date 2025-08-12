@@ -334,7 +334,7 @@ def check_attendance(layout_id):
         updated = False
         for slot, value in layout_data.items():
             if isinstance(value, dict) and value.get("vendorID") == vendor_id:
-                value["status"] = "attended"  # or "present"
+                value["status"] = "pending payment"  # or "present"
                 updated = True
                 break
 
@@ -357,3 +357,4 @@ def check_attendance(layout_id):
             cursor.close()
         if conn:
             conn.close()
+

@@ -143,6 +143,7 @@ def begin_attendance(id):
                 if vendor_row and vendor_row[0]:
                     line_user_id = vendor_row[0]
                     attendance_url = f"https://2d326c2dd4bd.ngrok-free.app/?layout_id={id}"
+                    check_payment_url = f""
                     message_text = f"Please check your attendance here: {attendance_url}"
 
                     # Send LINE message BEFORE updating DB
@@ -259,3 +260,68 @@ def change_all_status_to_pending_payment(id,conn,cursor):
     else:
         print(f"No record with {id} found.")
 
+@layouts_bp.route("/get_all_active_layout", methods=["GET"])
+def get_all_active_layout():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, status, data FROM layouts WHERE status = %s", ("active",))
+        rows = cursor.fetchall()
+
+        layouts = []
+        for row in rows:
+            layout = {
+                "id": row[0],
+                "name": row[1],
+                "status": row[2],
+                "data": json.loads(row[3]) if row[3] else {}
+            }
+            layouts.append(layout)
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(layouts), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@layouts_bp.route("/reset_all_attendance", methods=["PUT"])
+def reset_all_attendance():
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch all layouts data
+        cursor.execute("SELECT id, data FROM layouts")
+        rows = cursor.fetchall()
+
+        for layout_id, data_json in rows:
+            if data_json:
+                data = json.loads(data_json)
+                # Reset each vendor's status to empty string
+                for vendor_info in data.values():
+                    if isinstance(vendor_info, dict) and "status" in vendor_info:
+                        vendor_info["status"] = ""
+                # Convert back to JSON string
+                new_data_json = json.dumps(data, ensure_ascii=False)
+
+                # Update this layout's data and status
+                cursor.execute(
+                    "UPDATE layouts SET data = %s, status = %s WHERE id = %s",
+                    (new_data_json, "inactive", layout_id)
+                )
+
+        conn.commit()
+        return jsonify({"message": "All layouts reset: vendor statuses cleared and layouts set to 'inactive'."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()

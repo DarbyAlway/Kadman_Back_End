@@ -70,7 +70,7 @@
               "Sending attendance...";
             try {
               const response = await fetch(
-                `https://c8a2d7940bf4.ngrok-free.app/check_attendance/${layoutId}`,
+                `https://c8a2d7940bf4.ngrok-free.app/check_attendance/${layoutId}`, // the url need to be backend
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },

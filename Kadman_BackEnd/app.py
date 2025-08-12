@@ -28,6 +28,8 @@ def create_app():
     app.register_blueprint(vendors_bp)
     app.register_blueprint(waiting_vendors_bp)
     app.register_blueprint(layouts_bp)
+    # app.register_blueprint(payment_bp, url_prefix='/payment')
+
     return app
 
 app = create_app()

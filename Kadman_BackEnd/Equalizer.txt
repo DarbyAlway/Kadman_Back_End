@@ -1,0 +1,12 @@
+Preamp: -5 dB
+
+GraphicEQ: 31.25 Hz, +8 dB
+GraphicEQ: 62.5 Hz, +6 dB
+GraphicEQ: 125 Hz, +4 dB
+GraphicEQ: 250 Hz, +2 dB
+GraphicEQ: 500 Hz, 0 dB
+GraphicEQ: 1000 Hz, 0 dB
+GraphicEQ: 2000 Hz, 0 dB
+GraphicEQ: 4000 Hz, 0 dB
+GraphicEQ: 8000 Hz, 0 dB
+GraphicEQ: 16000 Hz, 0 dB
