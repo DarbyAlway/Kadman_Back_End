@@ -259,6 +259,39 @@ def reset_attendance():
     finally:
         conn.close()
 
+# get the attendance number with specific line_id 
+@vendors_bp.route("/get_attendance/<int:line_id>", methods=['POST'])
+def get_attendance(line_id):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(dictionary=True)
+
+        # Prepare and execute the query
+        cursor.execute("""
+            SELECT attendance
+            FROM vendors
+            WHERE lineID = %s
+        """, (line_id,))
+
+        row = cursor.fetchone()
+
+        if row is None:
+            return jsonify({"error": f"No vendor found with lineID {line_id}"}), 404
+
+        return jsonify({
+            "lineID": line_id,
+            "attendance": row["attendance"]
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
 # Check attendance 
 @vendors_bp.route("/check_attendance/<int:layout_id>", methods=['POST'])
 def check_attendance(layout_id):
