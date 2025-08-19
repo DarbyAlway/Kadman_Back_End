@@ -223,6 +223,7 @@ def send_line_multicast(user_ids, message_text):
 
     response = requests.post(url, headers=headers, json=payload)
     return response.status_code, response.text
+<<<<<<< Updated upstream
 
 
 # Change all vendor's status in layout table to 'pending' 
@@ -325,3 +326,6 @@ def reset_all_attendance():
             cursor.close()
         if conn and conn.is_connected():
             conn.close()
+=======
+#Pp0810237623@hot
+>>>>>>> Stashed changes
