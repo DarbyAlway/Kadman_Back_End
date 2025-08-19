@@ -364,9 +364,9 @@ def check_attendance(layout_id):
 
         cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (json.dumps(layout_data), layout_id))
         conn.commit()
-
+        payment_url = 'https://b0eaba760456.ngrok-free.app/payment'
         # Send text message via LINE
-        message_text = f"Hello {display_name}, your attendance for {days_count} day(s) has been recorded. Your new attendance count is {new_attendance}."
+        message_text = f"For payment confirmation use this link {payment_url}"
         status_code, response_text = send_line_multicast([user_id], message_text)
         print(f"LINE response: {status_code} {response_text}")
 
