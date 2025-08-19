@@ -8,9 +8,12 @@ import os
 from dotenv import load_dotenv
 from flask import Response
 import traceback
+from layouts import send_line_multicast
+
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
 ES_KEY = os.getenv('ES_KEY')
+PROMPTPAY_NUMBER = "0864395473"
 
 es = Elasticsearch(
     "https://localhost:9200",
@@ -295,7 +298,6 @@ def get_attendance(line_id):
 def check_attendance(layout_id):
     conn = None
     cursor = None
-    print('checked attendance received')
     try:
         data = request.get_json()
         if not data:
@@ -303,60 +305,88 @@ def check_attendance(layout_id):
 
         user_id = data.get('userId')
         display_name = data.get('displayName')
-        days = data.get('days')
+        days = data.get('days')  # list of strings
 
-        if not user_id or not days:
+        if user_id is None or days is None:
             return jsonify({"error": "Missing required fields"}), 400
+
+        days_count = len(days) if isinstance(days, list) else 0
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Find vendor in layout by userId (assuming you map LINE userId to vendors.lineID)
-        # You may need to join vendors & layouts data or maintain a reverse map
-
-        # Example: find vendorID by lineID = user_id
-        cursor.execute("SELECT vendorID FROM vendors WHERE lineID = %s", (user_id,))
+        # Find vendor
+        cursor.execute("SELECT vendorID, attendance FROM vendors WHERE lineID = %s", (user_id,))
         vendor_row = cursor.fetchone()
         if not vendor_row:
-            return jsonify({"error": "Vendor not found for this userId"}), 404
+            return jsonify({"error": "Vendor not found"}), 404
 
-        vendor_id = vendor_row[0]
+        vendor_id, current_attendance = vendor_row
 
-        # Now update the layout data JSON to set this vendor's status to 'attended' or your desired status
+        # Adjust attendance
+        if days_count == 3:
+            new_attendance = current_attendance
+        elif days_count == 2:
+            new_attendance = max(0, current_attendance - 1)
+        elif days_count == 1:
+            new_attendance = max(0, current_attendance - 2)
+        else:
+            new_attendance = 0
+
+        # Update vendors table
+        cursor.execute(
+            "UPDATE vendors SET attendance = %s WHERE vendorID = %s",
+            (new_attendance, vendor_id)
+        )
+
+        # Update layout JSON
         cursor.execute("SELECT data FROM layouts WHERE id = %s", (layout_id,))
         layout_row = cursor.fetchone()
         if not layout_row:
             return jsonify({"error": f"Layout ID {layout_id} not found"}), 404
 
         layout_data = json.loads(layout_row[0])
-
-        # Update vendor status inside layout JSON
         updated = False
         for slot, value in layout_data.items():
             if isinstance(value, dict) and value.get("vendorID") == vendor_id:
-                value["status"] = "pending payment"  # or "present"
+                value["status"] = "pending payment"
                 updated = True
                 break
-
         if not updated:
             return jsonify({"error": "Vendor not found in layout"}), 404
 
-        # Save updated JSON back to DB
         cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (json.dumps(layout_data), layout_id))
         conn.commit()
 
-        print(f"✅ Attendance checked: {display_name} ({user_id}), layout {layout_id}")
-        return jsonify({"message": "Attendance recorded"}), 200
+        # Generate PromptPay link
+        amount = days_count * 100
+        promptpay_link = f"https://promptpay.io/0864395473/{amount}"
+
+        # Send to LINE using your function
+        message_text = f"Thank you for attending {days_count} day(s)! Please use this link to receive payment:\n{promptpay_link}"
+        status_code, response_text = send_line_multicast([user_id], message_text)
+        print(f"LINE response: {status_code} {response_text}")
+
+        return jsonify({
+            "message": "Attendance recorded",
+            "vendorID": vendor_id,
+            "days_checked": days,
+            "old_attendance": current_attendance,
+            "new_attendance": new_attendance,
+            "promptpay_link": promptpay_link
+        }), 200
 
     except Exception as e:
         print("❌ Error in /check_attendance:", str(e))
-        return jsonify({"error": "Server error"}), 500
+        return jsonify({"error": str(e)}), 500
 
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+
+
 
 # get quota with specific line_id (from JSON body)
 @vendors_bp.route("/get_quota", methods=['POST'])
@@ -365,34 +395,37 @@ def get_quota():
     cursor = None
     try:
         data = request.get_json()
+        print("Received JSON from get_quota:", data)  # log incoming data
+
         if not data:
+            print("❌ No JSON received in request body")
             return jsonify({"error": "Request body must be JSON"}), 400
 
-        line_id = data.get("lineID")
+        # accept either "lineID" or "userId" from frontend
+        line_id = data.get("lineID") or data.get("userId")
         if not line_id:
-            return jsonify({"error": "lineID is required"}), 400
+            print("❌ Missing 'lineID' or 'userId' in JSON")
+            return jsonify({"error": "lineID or userId is required"}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Query to fetch quota for vendor with given lineID (string)
-        cursor.execute("""
-            SELECT attendance
-            FROM vendors
-            WHERE lineID = %s
-        """, (line_id,))
-
+        # Query to fetch quota for vendor with given lineID
+        cursor.execute("SELECT attendance FROM vendors WHERE lineID = %s", (line_id,))
         row = cursor.fetchone()
 
         if row is None:
+            print(f"❌ No vendor found with lineID {line_id}")
             return jsonify({"error": f"No vendor found with lineID {line_id}"}), 404
 
+        print(f"✅ Vendor {line_id} has {row['attendance']} attendance left")
         return jsonify({
             "lineID": line_id,
             "attendance": row["attendance"]
         }), 200
 
     except Exception as e:
+        print("❌ Exception in /get_quota:", str(e))
         return jsonify({"error": str(e)}), 500
 
     finally:
@@ -400,3 +433,11 @@ def get_quota():
             cursor.close()
         if conn:
             conn.close()
+
+def calculate_promptpay_amount(days_checked):
+    # Assume each day is worth 100 units
+    return len(days_checked) * 100
+
+def generate_promptpay_link(base_number, amount):
+    # base_number: the phone number associated with PromptPay (string)
+    return f"https://promptpay.io/{base_number}/{amount}"

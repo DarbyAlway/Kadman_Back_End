@@ -4,302 +4,13 @@
     <title>Attendance LIFF App</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      /* Reset and Base Styles */
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-          sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      /* Main Container */
-      .container {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        padding: 2rem;
-        width: 100%;
-        max-width: 400px;
-        border: 1px solid #e5e7eb;
-      }
-
-      /* Header Styles */
-      h2 {
-        color: #1f2937;
-        font-size: 1.5rem;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.025em;
-      }
-
-      /* Status Text */
-      #status {
-        color: #6b7280;
-        font-size: 0.875rem;
-        text-align: center;
-        margin-bottom: 2rem;
-        padding: 0.75rem;
-        background: #f9fafb;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        line-height: 1.5;
-      }
-
-      #status.loading {
-        background: #dbeafe;
-        color: #1e40af;
-        border-color: #93c5fd;
-      }
-
-      #status.success {
-        background: #dcfce7;
-        color: #166534;
-        border-color: #86efac;
-      }
-
-      #status.error {
-        background: #fef2f2;
-        color: #dc2626;
-        border-color: #fca5a5;
-      }
-
-      /* Form Styles */
-      #attendanceForm {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      /* Days Selection Container */
-      .days-container {
-        background: #f9fafb;
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 1px solid #e5e7eb;
-      }
-
-      .days-title {
-        color: #374151;
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      /* Checkbox Labels */
-      .checkbox-item {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        background: white;
-        border-radius: 8px;
-        border: 2px solid #e5e7eb;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        user-select: none;
-      }
-
-      .checkbox-item:last-child {
-        margin-bottom: 0;
-      }
-
-      .checkbox-item:hover {
-        border-color: #3b82f6;
-        background: #eff6ff;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      }
-
-      .checkbox-item.checked {
-        border-color: #3b82f6;
-        background: #dbeafe;
-      }
-
-      /* Custom Checkbox */
-      .checkbox-item input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        margin-right: 0.75rem;
-        cursor: pointer;
-        accent-color: #3b82f6;
-      }
-
-      .checkbox-item label {
-        color: #374151;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        flex: 1;
-        display: flex;
-        align-items: center;
-      }
-
-      /* Submit Button */
-      button[type="submit"] {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.875rem 1.5rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin-top: 0.5rem;
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
-
-      button[type="submit"]:hover {
-        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 15px -3px rgba(59, 130, 246, 0.4);
-      }
-
-      button[type="submit"]:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-      }
-
-      button[type="submit"]:disabled {
-        background: #9ca3af;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      /* Loading Animation */
-      .loading-spinner {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid #ffffff;
-        border-radius: 50%;
-        border-top-color: transparent;
-        animation: spin 1s ease-in-out infinite;
-        margin-right: 0.5rem;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      /* Mobile Responsiveness */
-      @media (max-width: 640px) {
-        body {
-          padding: 0.5rem;
-        }
-
-        .container {
-          padding: 1.5rem;
-          border-radius: 12px;
-        }
-
-        h2 {
-          font-size: 1.25rem;
-        }
-
-        button[type="submit"] {
-          padding: 1rem 1.5rem;
-          font-size: 0.875rem;
-        }
-      }
-
-      /* Focus States for Accessibility */
-      input[type="checkbox"]:focus {
-        outline: 2px solid #3b82f6;
-        outline-offset: 2px;
-      }
-
-      button[type="submit"]:focus {
-        outline: 2px solid #3b82f6;
-        outline-offset: 2px;
-      }
-
-      /* Success/Error States */
-      .form-success {
-        background: #dcfce7;
-        border-color: #86efac;
-      }
-
-      .form-error {
-        background: #fef2f2;
-        border-color: #fca5a5;
-      }
-
-      /* Additional Visual Enhancements */
-      .container::before {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 18px;
-        z-index: -1;
-        opacity: 0.1;
-      }
-
-      .container {
-        position: relative;
-      }
-
-      /* Subtle animations */
-      .container {
-        animation: fadeInUp 0.6s ease-out;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* Day badges style */
-      .checkbox-item::after {
-        content: '';
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #e5e7eb;
-        margin-left: auto;
-        transition: all 0.2s ease;
-      }
-
-      .checkbox-item.checked::after {
-        background: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
       <h2>Attendance Check</h2>
       <p id="status" class="loading">Loading...</p>
+      <p id="quota" class="quota-box loading">Loading quota...</p>
 
       <form id="attendanceForm">
         <div class="days-container">
@@ -330,17 +41,13 @@
     <script>
       const liffId = "2007876163-7dLrAMJr"; // Replace with your LIFF ID
 
-      // Add interactive checkbox styling
       document.addEventListener('DOMContentLoaded', function() {
         const checkboxItems = document.querySelectorAll('.checkbox-item');
-        
         checkboxItems.forEach(item => {
           const checkbox = item.querySelector('input[type="checkbox"]');
           
           item.addEventListener('click', function(e) {
-            if (e.target !== checkbox) {
-              checkbox.checked = !checkbox.checked;
-            }
+            if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
             updateCheckboxState(item, checkbox.checked);
           });
           
@@ -348,98 +55,91 @@
             updateCheckboxState(item, this.checked);
           });
         });
-        
+
         function updateCheckboxState(item, checked) {
-          if (checked) {
-            item.classList.add('checked');
-          } else {
-            item.classList.remove('checked');
-          }
+          if (checked) item.classList.add('checked');
+          else item.classList.remove('checked');
         }
-        
-        // Update status styling based on content
-        const observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList' || mutation.type === 'characterData') {
-              updateStatusStyling();
-            }
-          });
-        });
-        
+
+        const observer = new MutationObserver(() => updateStatusStyling());
         observer.observe(document.getElementById('status'), {
-          childList: true,
-          subtree: true,
-          characterData: true
+          childList: true, subtree: true, characterData: true
         });
-        
+
         function updateStatusStyling() {
           const status = document.getElementById('status');
           const text = status.textContent.toLowerCase();
-          
           status.classList.remove('loading', 'success', 'error');
-          
-          if (text.includes('loading') || text.includes('sending')) {
-            status.classList.add('loading');
-          } else if (text.includes('success') || text.includes('thank you')) {
-            status.classList.add('success');
-          } else if (text.includes('error') || text.includes('failed')) {
-            status.classList.add('error');
-          }
+          if (text.includes('loading') || text.includes('sending')) status.classList.add('loading');
+          else if (text.includes('success') || text.includes('thank you')) status.classList.add('success');
+          else if (text.includes('error') || text.includes('failed')) status.classList.add('error');
         }
       });
 
       function getLayoutIdFromUrl() {
         const params = new URLSearchParams(window.location.search);
-        console.log("layout_id: ", params.get("layout_id"));
         return params.get("layout_id");
       }
 
       async function main() {
         await liff.init({ liffId });
-
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
+        if (!liff.isLoggedIn()) { liff.login(); return; }
 
         const layoutId = getLayoutIdFromUrl();
         if (!layoutId) {
-          document.getElementById("status").textContent =
-            "Layout ID missing in URL.";
+          document.getElementById("status").textContent = "Layout ID missing in URL.";
           return;
         }
 
         try {
           const profile = await liff.getProfile();
-          document.getElementById(
-            "status"
-          ).textContent = `Hello, ${profile.displayName}! Please select days and submit your attendance.`;
+          const statusEl = document.getElementById("status");
+          const quotaEl = document.getElementById("quota");
+
+          statusEl.textContent = `Hello, ${profile.displayName}! Please select days and submit your attendance.`;
+
+          // Fetch current quota from backend
+          try {
+            const quotaResponse = await fetch(`https://e43e92b2a19b.ngrok-free.app/get_quota`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lineID: profile.userId })
+            });
+
+            if (quotaResponse.ok) {
+              const quotaData = await quotaResponse.json();
+              quotaEl.textContent = `Your current attendance quota: ${quotaData.attendance}`;
+              quotaEl.classList.remove('loading');
+            } else {
+              quotaEl.textContent = "Failed to fetch quota.";
+              quotaEl.classList.remove('loading');
+              quotaEl.classList.add('error');
+            }
+          } catch (err) {
+            quotaEl.textContent = "Error fetching quota: " + err.message;
+            quotaEl.classList.remove('loading');
+            quotaEl.classList.add('error');
+          }
 
           const form = document.getElementById("attendanceForm");
           const submitBtn = form.querySelector('button[type="submit"]');
-          
+
           form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const checkedDays = Array.from(form.elements["days"])
-              .filter((cb) => cb.checked)
-              .map((cb) => cb.value);
+              .filter(cb => cb.checked)
+              .map(cb => cb.value);
 
-            if (checkedDays.length === 0) {
-              alert("Please select at least one day.");
-              return;
-            }
+            if (checkedDays.length === 0) { alert("Please select at least one day."); return; }
 
-            // Update button to loading state
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading-spinner"></span>Submitting...';
-            
-            document.getElementById("status").textContent =
-              "Sending attendance...";
-              
+            statusEl.textContent = "Sending attendance...";
+
             try {
               const response = await fetch(
-                ` https://cefae0b493b4.ngrok-free.app/check_attendance/${layoutId}`, // the url need to be backend ,port(5000)
+                `https://e43e92b2a19b.ngrok-free.app/check_attendance/${layoutId}`,
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -452,25 +152,30 @@
               );
 
               if (response.ok) {
-                document.getElementById("status").textContent =
-                  "Attendance checked successfully. Thank you!";
+                statusEl.textContent = "Attendance checked successfully. Thank you!";
                 form.reset();
-                // Reset checkbox states
-                document.querySelectorAll('.checkbox-item').forEach(item => {
-                  item.classList.remove('checked');
+                document.querySelectorAll('.checkbox-item').forEach(item => item.classList.remove('checked'));
+
+                // Refresh quota after attendance submission
+                const quotaResponse = await fetch(`https://e43e92b2a19b.ngrok-free.app/get_quota`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ lineID: profile.userId })
                 });
+                console.log("profile.userId:", profile.userId);
+                if (quotaResponse.ok) {
+                  const quotaData = await quotaResponse.json();
+                  quotaEl.textContent = `Your current attendance quota: ${quotaData.quota}`;
+                }
+
               } else {
-                document.getElementById("status").textContent =
-                  "Failed to check attendance.";
-                response.text().then(text => {
-                  console.error("Response body:", text);
-                });
+                statusEl.textContent = "Failed to check attendance.";
+                const text = await response.text();
+                console.error("Response body:", text);
               }
             } catch (error) {
-              document.getElementById("status").textContent =
-                "Error sending attendance: " + error.message;
+              statusEl.textContent = "Error sending attendance: " + error.message;
             } finally {
-              // Reset button state
               submitBtn.disabled = false;
               submitBtn.innerHTML = '<span class="submit-text">Submit Attendance</span>';
             }
