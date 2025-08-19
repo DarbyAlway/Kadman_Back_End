@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Page</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h2>Payment Page</h2>
+  <div id="userInfo">
+    <p>Loading user info...</p>
+  </div>
+
+  <form id="uploadForm" enctype="multipart/form-data">
+    <label for="paymentSlip">Upload Payment Slip:</label><br />
+    <input type="file" id="paymentSlip" name="paymentSlip" accept="image/*" required /><br /><br />
+    <button type="submit">Submit</button>
+  </form>
+
+  <p id="uploadStatus"></p>
+
+  <script>
+    const liffId = "2007876163-7dLrAMJr"; // Replace with your LIFF ID
+
+    async function main() {
+      try {
+        await liff.init({ liffId });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+
+        document.getElementById("userInfo").innerHTML = `
+          <img src="${profile.pictureUrl}" alt="Profile Picture" width="80" height="80" />
+          <p><strong>Name:</strong> ${profile.displayName}</p>
+          <p><strong>User ID:</strong> ${profile.userId}</p>
+        `;
+
+        // Handle form submission
+        const form = document.getElementById("uploadForm");
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const fileInput = document.getElementById("paymentSlip");
+          if (fileInput.files.length === 0) {
+            alert("Please select an image file.");
+            return;
+          }
+
+          const file = fileInput.files[0];
+          const formData = new FormData();
+          formData.append("paymentSlip", file);
+          formData.append("userId", profile.userId);
+          formData.append("displayName", profile.displayName);
+
+          document.getElementById("uploadStatus").textContent = "Uploading...";
+
+          try {
+            const response = await fetch("YOUR_BACKEND_UPLOAD_ENDPOINT", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (response.ok) {
+              document.getElementById("uploadStatus").textContent = "Upload successful! Thank you.";
+              form.reset();
+            } else {
+              const errorText = await response.text();
+              document.getElementById("uploadStatus").textContent = "Upload failed: " + errorText;
+            }
+          } catch (error) {
+            document.getElementById("uploadStatus").textContent = "Error: " + error.message;
+          }
+        });
+      } catch (error) {
+        document.getElementById("userInfo").textContent =
+          "Error loading LIFF: " + error.message;
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>

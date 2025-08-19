@@ -1,47 +1,110 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Attendance LIFF App</title>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-</head>
-<body>
-  <h2>Attendance Check</h2>
-  <p id="status">Loading...</p>
+  <head>
+    <title>Attendance LIFF App</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  </head>
+  <body>
+    <h2>Attendance Check</h2>
+    <p id="status">Loading...</p>
 
-  <script>
-    const liffId = "2007876163-7dLrAMJr"; // Replace with your LIFF ID
+    <form id="attendanceForm">
+      <label
+        ><input type="checkbox" name="days" value="Tuesday" /> Tuesday</label
+      ><br />
+      <label
+        ><input type="checkbox" name="days" value="Wednesday" />
+        Wednesday</label
+      ><br />
+      <label
+        ><input type="checkbox" name="days" value="Thursday" /> Thursday</label
+      ><br /><br />
 
-    async function main() {
-      await liff.init({ liffId });
+      <button type="submit">Submit Attendance</button>
+    </form>
 
-      if (!liff.isLoggedIn()) {
-        liff.login();
-        return; // after login, LIFF app reloads
+    <script>
+      const liffId = "2007876163-7dLrAMJr"; // Replace with your LIFF ID
+
+      function getLayoutIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        console.log("layout_id: ", params.get("layout_id"));
+        return params.get("layout_id");
       }
 
-      try {
-        const profile = await liff.getProfile();
-        document.getElementById('status').textContent = `Hello, ${profile.displayName}! Checking attendance...`;
+      async function main() {
+        await liff.init({ liffId });
 
-        // Send userId to your backend
-        const response = await fetch('https://33756b544304.ngrok-free.app/check_attendance', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: profile.userId, displayName: profile.displayName })
-        });
-        
-        if (response.ok) {
-          document.getElementById('status').textContent = 'Attendance checked successfully. Thank you!';
-        } else {
-          document.getElementById('status').textContent = 'Failed to check attendance.';
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
         }
 
-      } catch (error) {
-        document.getElementById('status').textContent = 'Error getting profile: ' + error.message;
-      }
-    }
+        const layoutId = getLayoutIdFromUrl();
+        if (!layoutId) {
+          document.getElementById("status").textContent =
+            "Layout ID missing in URL.";
+          return;
+        }
 
-    main();
-  </script>
-</body>
+        try {
+          const profile = await liff.getProfile();
+          document.getElementById(
+            "status"
+          ).textContent = `Hello, ${profile.displayName}! Please select days and submit your attendance.`;
+
+          const form = document.getElementById("attendanceForm");
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const checkedDays = Array.from(form.elements["days"])
+              .filter((cb) => cb.checked)
+              .map((cb) => cb.value);
+
+            if (checkedDays.length === 0) {
+              alert("Please select at least one day.");
+              return;
+            }
+
+            document.getElementById("status").textContent =
+              "Sending attendance...";
+            try {
+              const response = await fetch(
+                `https://c8a2d7940bf4.ngrok-free.app/check_attendance/${layoutId}`, // the url need to be backend
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    days: checkedDays,
+                  }),
+                }
+              );
+
+              if (response.ok) {
+                document.getElementById("status").textContent =
+                  "Attendance checked successfully. Thank you!";
+                form.reset();
+              } else {
+                document.getElementById("status").textContent =
+                  "Failed to check attendance.";
+                  response.text().then(text => {
+      console.error("Response body:", text);
+    });
+              }
+            } catch (error) {
+              document.getElementById("status").textContent =
+                "Error sending attendance: " + error.message;
+            }
+          });
+        } catch (error) {
+          document.getElementById("status").textContent =
+            "Error getting profile: " + error.message;
+        }
+      }
+
+      main();
+    </script>
+  </body>
 </html>
