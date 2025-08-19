@@ -10,6 +10,11 @@ from flask import Response
 import traceback
 import requests
 from layouts import send_line_multicast,send_line_qrcode
+import io
+import qrcode
+from flask import send_file
+import urllib.parse
+from promptpay import qrcode
 
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
@@ -360,37 +365,17 @@ def check_attendance(layout_id):
         cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (json.dumps(layout_data), layout_id))
         conn.commit()
 
-        # Generate PromptPay QR code image URL
-        amount = days_count * 100
-        promptpay_link = f"https://promptpay.io/0864395473/{amount}"
-        qrcode_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={promptpay_link}"
-
-        # Send QR code image to LINE
-        url = 'https://api.line.me/v2/bot/message/multicast'
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {CHANNEL_ACCESS_TOKEN}'
-        }
-        payload = {
-            "to": [user_id],
-            "messages": [
-                {
-                    "type": "image",
-                    "originalContentUrl": qrcode_url,
-                    "previewImageUrl": qrcode_url
-                }
-            ]
-        }
-        response = requests.post(url, headers=headers, json=payload)
-        print(f"LINE QR code response: {response.status_code} {response.text}")
+        # Send text message via LINE
+        message_text = f"Hello {display_name}, your attendance for {days_count} day(s) has been recorded. Your new attendance count is {new_attendance}."
+        status_code, response_text = send_line_multicast([user_id], message_text)
+        print(f"LINE response: {status_code} {response_text}")
 
         return jsonify({
-            "message": "Attendance recorded and QR code sent",
+            "message": "Attendance recorded and message sent",
             "vendorID": vendor_id,
             "days_checked": days,
             "old_attendance": current_attendance,
-            "new_attendance": new_attendance,
-            "promptpay_link": promptpay_link
+            "new_attendance": new_attendance
         }), 200
 
     except Exception as e:

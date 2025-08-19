@@ -15,17 +15,14 @@
       <form id="attendanceForm">
         <div class="days-container">
           <div class="days-title">Select Available Days</div>
-          
           <div class="checkbox-item">
             <input type="checkbox" name="days" value="Tuesday" id="tuesday" />
             <label for="tuesday">Tuesday</label>
           </div>
-          
           <div class="checkbox-item">
             <input type="checkbox" name="days" value="Wednesday" id="wednesday" />
             <label for="wednesday">Wednesday</label>
           </div>
-          
           <div class="checkbox-item">
             <input type="checkbox" name="days" value="Thursday" id="thursday" />
             <label for="thursday">Thursday</label>
@@ -36,6 +33,12 @@
           <span class="submit-text">Submit Attendance</span>
         </button>
       </form>
+
+      <!-- Payment info after attendance -->
+      <div id="paymentInfo" style="margin-top: 20px; text-align: center; display: none;">
+        <img id="promptpayQR" src="" alt="PromptPay QR" style="width:200px;height:200px;" />
+        <p id="paymentAmount" style="font-weight:bold; margin-top:10px;"></p>
+      </div>
     </div>
 
     <script>
@@ -45,12 +48,10 @@
         const checkboxItems = document.querySelectorAll('.checkbox-item');
         checkboxItems.forEach(item => {
           const checkbox = item.querySelector('input[type="checkbox"]');
-          
           item.addEventListener('click', function(e) {
             if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
             updateCheckboxState(item, checkbox.checked);
           });
-          
           checkbox.addEventListener('change', function() {
             updateCheckboxState(item, this.checked);
           });
@@ -100,7 +101,7 @@
 
           // Fetch current quota from backend
           try {
-            const quotaResponse = await fetch(`https://e43e92b2a19b.ngrok-free.app/get_quota`, {
+            const quotaResponse = await fetch(`https://9b9651eb3664.ngrok-free.app/get_quota`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ lineID: profile.userId })
@@ -139,7 +140,7 @@
 
             try {
               const response = await fetch(
-                `https://e43e92b2a19b.ngrok-free.app/check_attendance/${layoutId}`,
+                `https://9b9651eb3664.ngrok-free.app/check_attendance/${layoutId}`,
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -152,22 +153,21 @@
               );
 
               if (response.ok) {
+                const result = await response.json();
+
+                // Show QR and amount
+                const paymentInfo = document.getElementById("paymentInfo");
+                const promptpayQR = document.getElementById("promptpayQR");
+                const paymentAmount = document.getElementById("paymentAmount");
+
+                promptpayQR.src = `https://promptpay.io/0864395473.png`;
+                paymentAmount.textContent = `Amount to pay: ${checkedDays.length * 100} THB`;
+
+                paymentInfo.style.display = "block";
+
                 statusEl.textContent = "Attendance checked successfully. Thank you!";
                 form.reset();
                 document.querySelectorAll('.checkbox-item').forEach(item => item.classList.remove('checked'));
-
-                // Refresh quota after attendance submission
-                const quotaResponse = await fetch(`https://e43e92b2a19b.ngrok-free.app/get_quota`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ lineID: profile.userId })
-                });
-                console.log("profile.userId:", profile.userId);
-                if (quotaResponse.ok) {
-                  const quotaData = await quotaResponse.json();
-                  quotaEl.textContent = `Your current attendance quota: ${quotaData.quota}`;
-                }
-
               } else {
                 statusEl.textContent = "Failed to check attendance.";
                 const text = await response.text();
