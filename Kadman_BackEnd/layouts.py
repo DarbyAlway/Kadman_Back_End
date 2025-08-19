@@ -326,3 +326,28 @@ def reset_all_attendance():
         if conn and conn.is_connected():
             conn.close()
 
+def send_line_qrcode(user_ids, link_amount):
+    # Generate the PromptPay URL with amount
+    promptpay_link = f"https://promptpay.io/0864395473/{link_amount}00"  # 100 per day
+    
+    # Generate QR code image URL
+    qrcode_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={promptpay_link}"
+
+    url = 'https://api.line.me/v2/bot/message/multicast'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {CHANNEL_ACCESS_TOKEN}'
+    }
+    payload = {
+        "to": user_ids,
+        "messages": [
+            {
+                "type": "image",
+                "originalContentUrl": qrcode_url,
+                "previewImageUrl": qrcode_url
+            }
+        ]
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    return response.status_code, response.text

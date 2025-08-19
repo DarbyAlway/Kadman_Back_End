@@ -8,12 +8,14 @@ import os
 from dotenv import load_dotenv
 from flask import Response
 import traceback
-from layouts import send_line_multicast
+import requests
+from layouts import send_line_multicast,send_line_qrcode
 
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
 ES_KEY = os.getenv('ES_KEY')
 PROMPTPAY_NUMBER = "0864395473"
+CHANNEL_ACCESS_TOKEN = os.getenv('LineOA_Key')
 
 es = Elasticsearch(
     "https://localhost:9200",
@@ -358,17 +360,32 @@ def check_attendance(layout_id):
         cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (json.dumps(layout_data), layout_id))
         conn.commit()
 
-        # Generate PromptPay link
+        # Generate PromptPay QR code image URL
         amount = days_count * 100
         promptpay_link = f"https://promptpay.io/0864395473/{amount}"
+        qrcode_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={promptpay_link}"
 
-        # Send to LINE using your function
-        message_text = f"Thank you for attending {days_count} day(s)! Please use this link to receive payment:\n{promptpay_link}"
-        status_code, response_text = send_line_multicast([user_id], message_text)
-        print(f"LINE response: {status_code} {response_text}")
+        # Send QR code image to LINE
+        url = 'https://api.line.me/v2/bot/message/multicast'
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {CHANNEL_ACCESS_TOKEN}'
+        }
+        payload = {
+            "to": [user_id],
+            "messages": [
+                {
+                    "type": "image",
+                    "originalContentUrl": qrcode_url,
+                    "previewImageUrl": qrcode_url
+                }
+            ]
+        }
+        response = requests.post(url, headers=headers, json=payload)
+        print(f"LINE QR code response: {response.status_code} {response.text}")
 
         return jsonify({
-            "message": "Attendance recorded",
+            "message": "Attendance recorded and QR code sent",
             "vendorID": vendor_id,
             "days_checked": days,
             "old_attendance": current_attendance,
@@ -385,8 +402,6 @@ def check_attendance(layout_id):
             cursor.close()
         if conn:
             conn.close()
-
-
 
 # get quota with specific line_id (from JSON body)
 @vendors_bp.route("/get_quota", methods=['POST'])
