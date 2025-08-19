@@ -358,3 +358,45 @@ def check_attendance(layout_id):
         if conn:
             conn.close()
 
+# get quota with specific line_id (from JSON body)
+@vendors_bp.route("/get_quota", methods=['POST'])
+def get_quota():
+    conn = None
+    cursor = None
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Request body must be JSON"}), 400
+
+        line_id = data.get("lineID")
+        if not line_id:
+            return jsonify({"error": "lineID is required"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Query to fetch quota for vendor with given lineID (string)
+        cursor.execute("""
+            SELECT attendance
+            FROM vendors
+            WHERE lineID = %s
+        """, (line_id,))
+
+        row = cursor.fetchone()
+
+        if row is None:
+            return jsonify({"error": f"No vendor found with lineID {line_id}"}), 404
+
+        return jsonify({
+            "lineID": line_id,
+            "attendance": row["attendance"]
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()

@@ -142,7 +142,7 @@ def begin_attendance(id):
 
                 if vendor_row and vendor_row[0]:
                     line_user_id = vendor_row[0]
-                    attendance_url = f"https://2d326c2dd4bd.ngrok-free.app/?layout_id={id}"
+                    attendance_url = f"https://e0600be0adcd.ngrok-free.app/?layout_id={id}"
                     check_payment_url = f""
                     message_text = f"Please check your attendance here: {attendance_url}"
 
@@ -223,7 +223,6 @@ def send_line_multicast(user_ids, message_text):
 
     response = requests.post(url, headers=headers, json=payload)
     return response.status_code, response.text
-<<<<<<< Updated upstream
 
 
 # Change all vendor's status in layout table to 'pending' 
@@ -326,6 +325,4 @@ def reset_all_attendance():
             cursor.close()
         if conn and conn.is_connected():
             conn.close()
-=======
-#Pp0810237623@hot
->>>>>>> Stashed changes
+
