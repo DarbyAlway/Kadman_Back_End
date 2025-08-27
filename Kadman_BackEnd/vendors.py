@@ -330,8 +330,8 @@ def check_attendance(layout_id):
         conn.commit()
         print("✅ Database changes committed successfully")
 
-        # --- Step 4: Send notification ---
-        payment_url = 'https://b0eaba760456.ngrok-free.app/payment'
+        # --- Step 4: Send notification for payment---
+        payment_url = 'https://25bb7a40dfdf.ngrok-free.app/payment' # Front end port
         status_code, response_text = notify_vendor(user_id, payment_url)
         print(f"✅ LINE notification sent successfully (status={status_code})")
 

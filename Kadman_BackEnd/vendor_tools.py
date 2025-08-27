@@ -30,7 +30,7 @@ def calculate_attendance(current_attendance, days_count):
     else:
         return 0
 
-def update_layout(cursor, layout_id, vendor_id):
+def update_layout(cursor, layout_id, vendor_id): # update vendors status in layout for waiting for payment
     cursor.execute("SELECT data FROM layouts WHERE id = %s", (layout_id,))
     layout_row = cursor.fetchone()
     if not layout_row:

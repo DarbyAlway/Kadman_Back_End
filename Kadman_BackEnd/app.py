@@ -5,6 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 import os
 import mysql.connector
+from verification import verification_bp
 
 
 def create_app():
@@ -28,6 +29,7 @@ def create_app():
     app.register_blueprint(vendors_bp)
     app.register_blueprint(waiting_vendors_bp)
     app.register_blueprint(layouts_bp)
+    app.register_blueprint(verification_bp)
     # app.register_blueprint(payment_bp, url_prefix='/payment')
 
     return app
