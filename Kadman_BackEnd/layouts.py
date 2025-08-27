@@ -142,7 +142,7 @@ def begin_attendance(id):
 
                 if vendor_row and vendor_row[0]:
                     line_user_id = vendor_row[0]
-                    attendance_url = f" https://b0eaba760456.ngrok-free.app/?layout_id={id}" ## front end port (3000)
+                    attendance_url = f"  https://25bb7a40dfdf.ngrok-free.app/?layout_id={id}" ## front end port (3000)
                     check_payment_url = f""
                     message_text = f"Please check your attendance here: {attendance_url}"
 

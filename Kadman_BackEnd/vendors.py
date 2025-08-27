@@ -15,6 +15,14 @@ import qrcode
 from flask import send_file
 import urllib.parse
 from promptpay import qrcode
+from vendor_tools import (
+    get_vendor_by_lineid,
+    update_vendor_attendance,
+    calculate_attendance,
+    update_layout,
+    notify_vendor,
+    update_vendor_attendance_days,
+)
 
 vendors_bp = Blueprint('vendors', __name__)# Vendors Blueprint
 load_dotenv()  # Load environment variables from .env file
@@ -269,38 +277,6 @@ def reset_attendance():
     finally:
         conn.close()
 
-# get the attendance number with specific line_id 
-@vendors_bp.route("/get_attendance/<int:line_id>", methods=['POST'])
-def get_attendance(line_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor(dictionary=True)
-
-        # Prepare and execute the query
-        cursor.execute("""
-            SELECT attendance
-            FROM vendors
-            WHERE lineID = %s
-        """, (line_id,))
-
-        row = cursor.fetchone()
-
-        if row is None:
-            return jsonify({"error": f"No vendor found with lineID {line_id}"}), 404
-
-        return jsonify({
-            "lineID": line_id,
-            "attendance": row["attendance"]
-        }), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
-
-# Check attendance 
 @vendors_bp.route("/check_attendance/<int:layout_id>", methods=['POST'])
 def check_attendance(layout_id):
     conn = None
@@ -313,7 +289,6 @@ def check_attendance(layout_id):
         user_id = data.get('userId')
         display_name = data.get('displayName')
         days = data.get('days')  # list of strings
-
         if user_id is None or days is None:
             return jsonify({"error": "Missing required fields"}), 400
 
@@ -322,64 +297,57 @@ def check_attendance(layout_id):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Find vendor
-        cursor.execute("SELECT vendorID, attendance FROM vendors WHERE lineID = %s", (user_id,))
-        vendor_row = cursor.fetchone()
+        # --- Step 1: Find vendor ---
+        vendor_row = get_vendor_by_lineid(cursor, user_id)
         if not vendor_row:
             return jsonify({"error": "Vendor not found"}), 404
-
         vendor_id, current_attendance = vendor_row
+        print(f"✅ Vendor {vendor_id} found successfully (attendance={current_attendance})")
 
-        # Adjust attendance
-        if days_count == 3:
-            new_attendance = current_attendance
-        elif days_count == 2:
-            new_attendance = max(0, current_attendance - 1)
-        elif days_count == 1:
-            new_attendance = max(0, current_attendance - 2)
-        else:
-            new_attendance = 0
+        # --- Step 2: Adjust attendance ---
+        new_attendance = calculate_attendance(current_attendance, days_count)
+        update_vendor_attendance(cursor, vendor_id, new_attendance)
+        print(f"✅ Attendance updated successfully (old={current_attendance}, new={new_attendance})")
 
-        # Update vendors table
+        # --- Step 2b: Save attendance days ---
+        days_json = update_vendor_attendance_days(cursor, vendor_id, days)
+        print(f"✅ Attendance days updated successfully: {days_json}")
+
+        # --Step 2c: Calculate payment
+        payment_amount = len(days) * 100
         cursor.execute(
-            "UPDATE vendors SET attendance = %s WHERE vendorID = %s",
-            (new_attendance, vendor_id)
+            "UPDATE vendors SET payment = %s WHERE vendorID = %s",
+            (payment_amount, vendor_id)
         )
+        print(f"✅ Payment updated successfully: {payment_amount}")
 
-        # Update layout JSON
-        cursor.execute("SELECT data FROM layouts WHERE id = %s", (layout_id,))
-        layout_row = cursor.fetchone()
-        if not layout_row:
-            return jsonify({"error": f"Layout ID {layout_id} not found"}), 404
-
-        layout_data = json.loads(layout_row[0])
-        updated = False
-        for slot, value in layout_data.items():
-            if isinstance(value, dict) and value.get("vendorID") == vendor_id:
-                value["status"] = "pending payment"
-                updated = True
-                break
+        # --- Step 3: Update layout ---
+        layout_data, updated = update_layout(cursor, layout_id, vendor_id)
         if not updated:
             return jsonify({"error": "Vendor not found in layout"}), 404
+        print(f"✅ Layout {layout_id} updated successfully for vendor {vendor_id}")
 
-        cursor.execute("UPDATE layouts SET data = %s WHERE id = %s", (json.dumps(layout_data), layout_id))
         conn.commit()
+        print("✅ Database changes committed successfully")
+
+        # --- Step 4: Send notification ---
         payment_url = 'https://b0eaba760456.ngrok-free.app/payment'
-        # Send text message via LINE
-        message_text = f"For payment confirmation use this link {payment_url}"
-        status_code, response_text = send_line_multicast([user_id], message_text)
-        print(f"LINE response: {status_code} {response_text}")
+        status_code, response_text = notify_vendor(user_id, payment_url)
+        print(f"✅ LINE notification sent successfully (status={status_code})")
 
         return jsonify({
             "message": "Attendance recorded and message sent",
             "vendorID": vendor_id,
             "days_checked": days,
             "old_attendance": current_attendance,
-            "new_attendance": new_attendance
+            "new_attendance": new_attendance,
+            "attendance_days": days_json,
+            "layout_updated": updated,
+            "line_status": status_code
         }), 200
 
     except Exception as e:
-        print("❌ Error in /check_attendance:", str(e))
+        print("❌ Error in /vendors/check_attendance:", str(e))
         return jsonify({"error": str(e)}), 500
 
     finally:
@@ -387,6 +355,7 @@ def check_attendance(layout_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 # get quota with specific line_id (from JSON body)
 @vendors_bp.route("/get_quota", methods=['POST'])
@@ -433,11 +402,3 @@ def get_quota():
             cursor.close()
         if conn:
             conn.close()
-
-def calculate_promptpay_amount(days_checked):
-    # Assume each day is worth 100 units
-    return len(days_checked) * 100
-
-def generate_promptpay_link(base_number, amount):
-    # base_number: the phone number associated with PromptPay (string)
-    return f"https://promptpay.io/{base_number}/{amount}"
