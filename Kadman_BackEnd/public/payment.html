@@ -58,7 +58,7 @@
           document.getElementById("uploadStatus").textContent = "Uploading...";
 
           try {
-            const response = await fetch("YOUR_BACKEND_UPLOAD_ENDPOINT", {
+            const response = await fetch("https://c81a504f5f08.ngrok-free.app/upload", {
               method: "POST",
               body: formData,
             });
@@ -68,7 +68,7 @@
               form.reset();
             } else {
               const errorText = await response.text();
-              document.getElementById("uploadStatus").textContent = "Upload failed: " + errorText;
+              document.getElementById("uploadStatus").textContent = "Upload failed Please check your upload image again";
             }
           } catch (error) {
             document.getElementById("uploadStatus").textContent = "Error: " + error.message;

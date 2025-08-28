@@ -101,7 +101,7 @@
 
           // Fetch current quota from backend
           try {
-            const quotaResponse = await fetch(`https://231e0cb2d9c9.ngrok-free.app/get_quota`, {
+            const quotaResponse = await fetch(`https://c81a504f5f08.ngrok-free.app/get_quota`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ lineID: profile.userId })
@@ -140,7 +140,7 @@
 
             try {
               const response = await fetch(
-                `https://231e0cb2d9c9.ngrok-free.app/check_attendance/${layoutId}`,
+                ` https://c81a504f5f08.ngrok-free.app/check_attendance/${layoutId}`, //backend url
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
