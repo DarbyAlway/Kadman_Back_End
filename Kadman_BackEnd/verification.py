@@ -20,6 +20,7 @@ EASYSLIP_TOKEN = os.getenv('EASY_SLIP_KEY')
 # Initialize boto3 S3 client
 s3_client = boto3.client('s3', region_name=S3_REGION, config=Config(signature_version=UNSIGNED))
 
+
 @verification_bp.route('/upload', methods=['POST'])
 def upload():
     if 'paymentSlip' not in request.files:
@@ -61,13 +62,33 @@ def upload():
             }), response.status_code
 
         easyslip_data = response.json()
+        trans_ref = easyslip_data.get("data", {}).get("transRef")
 
-        # === Step 3: Update DB: vendors and layouts ===
+        if not trans_ref:
+            return jsonify({"error": "No transaction reference found in EasySlip response"}), 400
+
+        # === Step 3: Check SlipHistory for duplicate ===
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 3a: Find vendor by LINE ID
-        cursor.execute("SELECT vendorID FROM vendors WHERE lineID = %s", (user_id,))
+        cursor.execute("SELECT SlipHistory_id FROM SlipHistory WHERE SlipHistory_ref = %s", (trans_ref,))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.close()
+            conn.close()
+            return jsonify({
+                "message": "Duplicate transaction reference, slip already processed",
+                "transRef": trans_ref
+            }), 400
+
+        # Insert new slip record
+        cursor.execute("INSERT INTO SlipHistory (SlipHistory_ref) VALUES (%s)", (trans_ref,))
+        conn.commit()
+        print(f"Stored transRef {trans_ref} into SlipHistory")
+
+        # === Step 4: Find vendor by LINE ID ===
+        cursor.execute("SELECT vendorID, payment FROM vendors WHERE lineID = %s", (user_id,))
         vendor = cursor.fetchone()
         if not vendor:
             cursor.close()
@@ -75,14 +96,30 @@ def upload():
             return jsonify({"error": "Vendor not found for this LINE ID"}), 404
 
         vendor_id = vendor["vendorID"]
-        print(f"Vendor found: {vendor_id}")
+        expected_payment = float(vendor["payment"])
+        paid_amount = easyslip_data.get("data", {}).get("amount", {}).get("amount")
 
-        # 3b: Update vendor payment
+        if paid_amount is None:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Unable to read payment amount from EasySlip"}), 400
+
+        # === Step 5: Compare payment amount ===
+        if float(paid_amount) != expected_payment:
+            cursor.close()
+            conn.close()
+            return jsonify({
+                "message": "Payment amount does not match expected amount",
+                "expected_payment": expected_payment,
+                "paid_amount": paid_amount
+            }), 400
+
+        # === Step 6: Update vendor payment ===
         cursor.execute("UPDATE vendors SET payment = %s WHERE vendorID = %s", ("paid", vendor_id))
         conn.commit()
         print(f"Vendor {vendor_id} payment set to 'paid'")
 
-        # 3c: Update all layouts where this vendor exists
+        # === Step 7: Update all layouts where this vendor exists ===
         cursor.execute("SELECT id, data FROM layouts")
         layouts = cursor.fetchall()
         updated_layouts = []
@@ -117,7 +154,7 @@ def upload():
         cursor.close()
         conn.close()
 
-        # === Step 4: Return success ===
+        # === Step 8: Return success ===
         return jsonify({
             "message": "Upload successful and verified",
             "file_url": file_url,
