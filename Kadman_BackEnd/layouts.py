@@ -9,6 +9,8 @@ import os
 load_dotenv()
 CHANNEL_ACCESS_TOKEN = os.getenv('LineOA_Key')
 layouts_bp = Blueprint('layouts', __name__) 
+FRONTEND_API = os.getenv('FRONTEND_API')
+BACKEND_API = os.getenv('BACKEND_API')
 
 @layouts_bp.route("/show_all_layouts", methods=["GET"])
 def show_all_layouts():
@@ -142,8 +144,8 @@ def begin_attendance(id):
 
                 if vendor_row and vendor_row[0]:
                     line_user_id = vendor_row[0]
-                    attendance_url = f"https://9becd7542461.ngrok-free.app/?layout_id={id}" ## front end port (3000)
-                    check_payment_url = f""
+                    print(FRONTEND_API)
+                    attendance_url = f"{FRONTEND_API}/?layout_id={id}" ## front end port (3000)
                     message_text = f"Please check your attendance here: {attendance_url}"
 
                     # Send LINE message BEFORE updating DB

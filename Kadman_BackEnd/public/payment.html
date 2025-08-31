@@ -360,6 +360,7 @@
   </div>
 
   <script>
+    require("dotenv").config();
     const liffId = "2007876163-7dLrAMJr"; // Replace with your LIFF ID
 
     async function main() {
@@ -403,7 +404,7 @@
           statusElement.textContent = "Uploading...";
 
           try {
-            const response = await fetch("https://5fced6e42c09.ngrok-free.app/upload", {
+            const response = await fetch(`${process.env.BACKEND_API}/upload`, {
               method: "POST",
               body: formData,
             });
