@@ -29,8 +29,7 @@ load_dotenv()  # Load environment variables from .env file
 ES_KEY = os.getenv('ES_KEY')
 PROMPTPAY_NUMBER = "0864395473"
 CHANNEL_ACCESS_TOKEN = os.getenv('LineOA_Key')
-FRONTEND_API = os.getenv('FRONTEND_API')
-BACKEND_API = os.getenv('BACKEND_API')
+
 
 es = Elasticsearch(
     "https://localhost:9200",
@@ -333,7 +332,7 @@ def check_attendance(layout_id):
         print("✅ Database changes committed successfully")
 
         # --- Step 4: Send notification for payment---
-        payment_url = f'{FRONTEND_API}/payment' # Front end port
+        payment_url = f'https://23922c7abf55.ngrok-free.app/payment' # Front end port
         status_code, response_text = notify_vendor(user_id, payment_url)
         print(f"✅ LINE notification sent successfully (status={status_code})")
 

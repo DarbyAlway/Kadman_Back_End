@@ -5,6 +5,16 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css" />
+    <style>
+      .info-box { padding: 10px; margin: 5px 0; border-radius: 5px; }
+      .default { background: #eee; }
+      .success { background: #c8f7c5; }
+      .error { background: #f7c5c5; }
+      .loading { background: #f7f7c5; }
+      .checkbox-item { cursor: pointer; margin: 5px 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+      .checkbox-item.checked { background-color: #c8f7c5; }
+      #paymentInfo { display: none; margin-top: 20px; }
+    </style>
   </head>
   <body>
     <div class="container">
@@ -51,33 +61,29 @@
     </div>
 
     <script>
-      require("dotenv").config();
       const liffId = "2007876163-7dLrAMJr";
+      const totalDays = 3; // total days available
+      let attendanceLeft = 0; // remaining absences
 
       document.addEventListener('DOMContentLoaded', function() {
         const checkboxItems = document.querySelectorAll('.checkbox-item');
-        
+
         checkboxItems.forEach(item => {
           const checkbox = item.querySelector('input[type="checkbox"]');
-          
+
           item.addEventListener('click', function(e) {
-            if (e.target !== checkbox) {
-              checkbox.checked = !checkbox.checked;
-            }
+            if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
             updateCheckboxState(item, checkbox.checked);
           });
-          
+
           checkbox.addEventListener('change', function() {
             updateCheckboxState(item, this.checked);
           });
         });
 
         function updateCheckboxState(item, checked) {
-          if (checked) {
-            item.classList.add('checked');
-          } else {
-            item.classList.remove('checked');
-          }
+          if (checked) item.classList.add('checked');
+          else item.classList.remove('checked');
         }
       });
 
@@ -87,21 +93,14 @@
       }
 
       async function main() {
-        await liff.init({ liffId });
-        
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
-
-        const layoutId = getLayoutIdFromUrl();
-        if (!layoutId) {
-          document.getElementById("status").textContent = "Layout ID missing in URL.";
-          document.getElementById("status").className = "info-box error";
-          return;
-        }
-
         try {
+          await liff.init({ liffId });
+
+          if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+          }
+
           const profile = await liff.getProfile();
           const statusEl = document.getElementById("status");
           const quotaEl = document.getElementById("quota");
@@ -109,10 +108,16 @@
           statusEl.textContent = `Hello, ${profile.displayName}! Please select your available days and submit.`;
           statusEl.className = "info-box success";
 
-          // Fetch current quota from BACKEND
+          const layoutId = getLayoutIdFromUrl();
+          if (!layoutId) {
+            statusEl.textContent = "Layout ID missing in URL.";
+            statusEl.className = "info-box error";
+            return;
+          }
+
+          // Fetch attendance left from backend
           try {
-            
-            const quotaResponse = await fetch(`${process.env.BACKEND_API}/get_quota`, {
+            const quotaResponse = await fetch(`https://b0b8d063ff13.ngrok-free.app/get_quota`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ lineID: profile.userId })
@@ -120,26 +125,24 @@
 
             if (quotaResponse.ok) {
               const quotaData = await quotaResponse.json();
+              attendanceLeft = quotaData.attendance;
+
               quotaEl.innerHTML = `
                 <div class="quota-icon"></div>
-                <span>Current attendance quota: ${quotaData.attendance}</span>
+                <span>You have ${attendanceLeft} absence(s) remaining.</span>
               `;
               quotaEl.className = "info-box success";
+
             } else {
-              quotaEl.innerHTML = `
-                <div class="quota-icon"></div>
-                <span>Failed to fetch quota information</span>
-              `;
+              quotaEl.innerHTML = `<span>Failed to fetch attendance info.</span>`;
               quotaEl.className = "info-box error";
             }
           } catch (err) {
-            quotaEl.innerHTML = `
-              <div class="quota-icon"></div>
-              <span>Error loading quota: ${err.message}</span>
-            `;
+            quotaEl.innerHTML = `<span>Error loading attendance: ${err.message}</span>`;
             quotaEl.className = "info-box error";
           }
 
+          // Form submission
           const form = document.getElementById("attendanceForm");
           const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -149,6 +152,13 @@
             const checkedDays = Array.from(form.elements["days"])
               .filter(cb => cb.checked)
               .map(cb => cb.value);
+
+            const skippedDays = totalDays - checkedDays.length;
+
+            if (skippedDays > attendanceLeft) {
+              alert(`You cannot skip more than ${attendanceLeft} day(s).`);
+              return;
+            }
 
             if (checkedDays.length === 0) {
               alert("Please select at least one day.");
@@ -162,7 +172,7 @@
 
             try {
               const response = await fetch(
-                `${process.env.BACKEND_API}/check_attendance/${layoutId}`,
+                `https://b0b8d063ff13.ngrok-free.app/check_attendance/${getLayoutIdFromUrl()}`,
                 {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -175,7 +185,6 @@
               );
 
               if (response.ok) {
-                const result = await response.json();
                 const paymentInfo = document.getElementById("paymentInfo");
                 const promptpayQR = document.getElementById("promptpayQR");
                 const paymentAmount = document.getElementById("paymentAmount");
@@ -187,16 +196,17 @@
 
                 statusEl.textContent = "Attendance submitted successfully! Please proceed with payment.";
                 statusEl.className = "info-box success";
-                
+
                 form.reset();
-                document.querySelectorAll('.checkbox-item').forEach(item => {
-                  item.classList.remove('checked');
-                });
+                document.querySelectorAll('.checkbox-item').forEach(item => item.classList.remove('checked'));
+
+                // Update remaining absences
+                attendanceLeft = totalDays - checkedDays.length;
+                quotaEl.innerHTML = `<div class="quota-icon"></div><span>You have ${attendanceLeft} absence(s) remaining.</span>`;
+
               } else {
                 statusEl.textContent = "Failed to submit attendance. Please try again.";
                 statusEl.className = "info-box error";
-                const text = await response.text();
-                console.error("Response body:", text);
               }
             } catch (error) {
               statusEl.textContent = "Error submitting attendance: " + error.message;
@@ -206,9 +216,10 @@
               submitBtn.innerHTML = '<span class="submit-text">Submit Attendance</span>';
             }
           });
+
         } catch (error) {
-          document.getElementById("status").textContent = "Error loading profile: " + error.message;
-          document.getElementById("status").className = "info-box error";
+          statusEl.textContent = "Error loading profile: " + error.message;
+          statusEl.className = "info-box error";
         }
       }
 

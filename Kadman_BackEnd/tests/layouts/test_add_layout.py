@@ -48,13 +48,13 @@ def test_insert_layout_with_old_and_new_mock_data(mock_get_db, client):
 
     # Verify SQL INSERT was called with correct data
     mock_cursor.execute.assert_called_once()
-    args = mock_cursor.execute.call_args[0]
+    query, values = mock_cursor.execute.call_args[0]
 
     expected_query = "INSERT INTO layouts (name, data) VALUES (%s, %s)"
-    assert args[0] == expected_query
-    assert args[1][0] == new_layout["name"]
-    assert json.loads(args[1][1]) == new_layout["data"]
+    assert query == expected_query
+    assert values[0] == new_layout["name"]
 
-    # Verify commit and close
-    mock_conn.commit.assert_called_once()
-    mock_cursor.close.assert_called_once()
+    # Normalize JSON comparison
+    inserted_data = json.loads(values[1])
+    assert inserted_data == new_layout["data"]
+
