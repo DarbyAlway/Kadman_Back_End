@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch, MagicMock
 from app import app
 from pathlib import Path
-
+import pprint
 @pytest.fixture
 def client():
     app.testing = True
@@ -18,9 +18,9 @@ def test_insert_layout_with_old_and_new_mock_data(mock_get_db, client):
 
     # Your new layout to insert
     new_layout = {
-        "name": "new_layout",
-        "data": {
-            "C1": {"vendorID": 10, "shop_name": "ร้านใหม่"}
+    "name": "new_layout",
+    "data": {
+        "C1": {"vendorID": 10, "shop_name": "ร้านใหม่", "status": ""}
         }
     }
 
@@ -54,7 +54,11 @@ def test_insert_layout_with_old_and_new_mock_data(mock_get_db, client):
     assert query == expected_query
     assert values[0] == new_layout["name"]
 
-    # Normalize JSON comparison
+    
     inserted_data = json.loads(values[1])
+    print("Inserted data:")
+    pprint.pprint(inserted_data)
+    print("Expected data:")
+    pprint.pprint(new_layout["data"])
     assert inserted_data == new_layout["data"]
 

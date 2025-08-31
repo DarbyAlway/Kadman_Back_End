@@ -238,7 +238,7 @@ def increase_num_of_attendance():
         vendorID = data.get("vendorID")
         cur = conn.cursor()
         cur.execute("UPDATE vendors SET attendance = attendance + 1 WHERE vendorID = %s", (vendorID,))
-        conn.commit
+        conn.commit()
         
         return {"message":"Attendance increased successfully"},200
     except Exception as e:
@@ -255,7 +255,7 @@ def decrease_num_of_attendance():
         vendorID = data.get("vendorID")
         cur = conn.cursor()
         cur.execute("UPDATE vendors SET attendance = attendance - 1 WHERE vendorID = %s", (vendorID,))
-        conn.commit
+        conn.commit()
         
         return {"message":"Attendance decreased successfully"},200
     except Exception as e:

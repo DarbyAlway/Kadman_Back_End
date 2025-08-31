@@ -1,5 +1,4 @@
 from vendors import vendors_bp
-from waiting_vendors import waiting_vendors_bp
 from layouts import layouts_bp
 from flask import Flask
 from flask_cors import CORS
@@ -27,7 +26,6 @@ def create_app():
     app.db = connection
 
     app.register_blueprint(vendors_bp)
-    app.register_blueprint(waiting_vendors_bp)
     app.register_blueprint(layouts_bp)
     app.register_blueprint(verification_bp)
     # app.register_blueprint(payment_bp, url_prefix='/payment')
