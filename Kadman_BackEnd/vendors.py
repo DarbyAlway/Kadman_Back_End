@@ -331,7 +331,7 @@ def check_attendance(layout_id):
         print("✅ Database changes committed successfully")
 
         # --- Step 4: Send notification for payment---
-        payment_url = ' https://b4acfc1ba659.ngrok-free.app/payment' # Front end port
+        payment_url = 'https://9becd7542461.ngrok-free.app/payment' # Front end port
         status_code, response_text = notify_vendor(user_id, payment_url)
         print(f"✅ LINE notification sent successfully (status={status_code})")
 
@@ -402,3 +402,33 @@ def get_quota():
             cursor.close()
         if conn:
             conn.close()
+
+# get payment with specific vendorID (via URL parameter)
+@vendors_bp.route("/get_payment/<int:vendorID>", methods=["GET"])
+def get_payment(vendorID):
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT payment FROM vendors WHERE vendorID = %s", (vendorID,))
+        row = cursor.fetchone()
+
+        if row is None:
+            return jsonify({"error": f"No vendor found with vendorID {vendorID}"}), 404
+
+        return jsonify({
+            "vendorID": vendorID,
+            "payment": row["payment"]
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
