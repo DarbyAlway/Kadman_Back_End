@@ -10,80 +10,83 @@ from vendor_tools import (
     generate_promptpay_link
 )
 
-@patch("vendor_tools.send_line_multicast")
-def test_full_vendor_workflow(mock_send):
-    """
-    Simulate full workflow:
-    1. Read vendor attendance and days
-    2. Calculate new attendance
-    3. Update layout status
-    4. Update attendance_days in vendor
-    5. Send payment notification
-    """
-    # ----------------------------
-    # Setup mock cursor and vendor data
-    # ----------------------------
+
+def test_calculate_promptpay_amount():
+    assert calculate_promptpay_amount(["Mon"]) == 100
+    assert calculate_promptpay_amount(["Mon", "Tue"]) == 200
+    assert calculate_promptpay_amount([]) == 0
+
+
+def test_generate_promptpay_link():
+    link = generate_promptpay_link("0812345678", 500)
+    assert link == "https://promptpay.io/0812345678/500"
+
+
+@pytest.mark.parametrize("days_count,current,expected", [
+    (3, 5, 5),   # unchanged
+    (2, 5, 4),   # minus 1
+    (2, 0, 0),   # not below 0
+    (1, 5, 3),   # minus 2
+    (1, 1, 0),   # min 0
+    (0, 10, 0),  # reset
+])
+def test_calculate_attendance(days_count, current, expected):
+    assert calculate_attendance(current, days_count) == expected
+
+
+def test_update_layout_success():
     mock_cursor = MagicMock()
-    
-    vendor_id = 123
-    user_id = "U12345"
-    current_attendance = 5
-    days_checked = ["Mon", "Tue"]  # 2 days attended
-    layout_data = {
-        "A1": {"vendorID": vendor_id, "status": "waiting"},
-        "A2": {"vendorID": 456, "status": "waiting"}
-    }
-    
-    # Mock fetchone for layout
+    layout_data = {"A1": {"vendorID": 1, "status": "old"}}
     mock_cursor.fetchone.return_value = (json.dumps(layout_data),)
-    
-    # ----------------------------
-    # Step 1: Calculate new attendance
-    # ----------------------------
-    new_attendance = calculate_attendance(current_attendance, len(days_checked))
-    assert new_attendance == 4  # current 5 - 1 (2 days checked)
-    
-    # ----------------------------
-    # Step 2: Update layout
-    # ----------------------------
-    updated_layout, updated_flag = update_layout(mock_cursor, layout_id=1, vendor_id=vendor_id)
-    assert updated_flag is True
+
+    updated_layout, updated = update_layout(mock_cursor, 10, 1)
+
+    assert updated is True
     assert updated_layout["A1"]["status"] == "pending payment"
-    
-    # ----------------------------
-    # Step 3: Update attendance_days in vendor
-    # ----------------------------
-    days_json = update_vendor_attendance_days(mock_cursor, vendor_id, days_checked)
-    assert days_json == json.dumps(days_checked)
-    
-    # ----------------------------
-    # Step 4: Generate PromptPay link and calculate amount
-    # ----------------------------
-    amount = calculate_promptpay_amount(days_checked)
-    assert amount == 200  # 2 days * 100
-    
-    base_number = "0812345678"
-    payment_url = generate_promptpay_link(base_number, amount)
-    assert payment_url == "https://promptpay.io/0812345678/200"
-    
-    # ----------------------------
-    # Step 5: Notify vendor
-    # ----------------------------
-    mock_send.return_value = "sent"
-    notify_result = notify_vendor(user_id, payment_url)
-    mock_send.assert_called_once_with([user_id], f"For payment confirmation use this link {payment_url}")
-    assert notify_result == "sent"
-    
-    # ----------------------------
-    # Verify cursor updates executed
-    # ----------------------------
-    # Layout update
+
     mock_cursor.execute.assert_any_call(
         "UPDATE layouts SET data = %s WHERE id = %s",
-        (json.dumps(updated_layout), 1)
+        (json.dumps(updated_layout), 10)
     )
-    # Attendance_days update
-    mock_cursor.execute.assert_any_call(
+
+
+def test_update_layout_not_found():
+    mock_cursor = MagicMock()
+    mock_cursor.fetchone.return_value = None
+
+    layout_data, updated = update_layout(mock_cursor, 99, 1)
+    assert layout_data is None
+    assert updated is False
+
+
+def test_update_layout_vendor_not_in_layout():
+    mock_cursor = MagicMock()
+    layout_data = {"A1": {"vendorID": 2, "status": "ok"}}
+    mock_cursor.fetchone.return_value = (json.dumps(layout_data),)
+
+    updated_layout, updated = update_layout(mock_cursor, 10, 1)
+
+    assert updated is False
+    assert updated_layout == layout_data
+
+
+def test_notify_vendor():
+    with patch("vendor_tools.send_line_multicast", return_value=(200, "OK")) as mock_send:
+        result = notify_vendor("line123", "http://pay.me")
+        assert result == (200, "OK")
+        mock_send.assert_called_once_with(
+            ["line123"], "For payment confirmation use this link http://pay.me"
+        )
+
+
+def test_update_vendor_attendance_days():
+    mock_cursor = MagicMock()
+    days = ["Mon", "Tue"]
+
+    result = update_vendor_attendance_days(mock_cursor, 1, days)
+
+    assert json.loads(result) == days
+    mock_cursor.execute.assert_called_once_with(
         "UPDATE vendors SET attendance_days = %s WHERE vendorID = %s",
-        (json.dumps(days_checked), vendor_id)
+        (json.dumps(days), 1)
     )
