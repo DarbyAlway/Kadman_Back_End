@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Attendance LIFF App</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .info-box { padding: 10px; margin: 5px 0; border-radius: 5px; }
+      .default { background: #eee; }
+      .success { background: #c8f7c5; }
+      .error { background: #f7c5c5; }
+      .loading { background: #f7f7c5; }
+      .checkbox-item { cursor: pointer; margin: 5px 0; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+      .checkbox-item.checked { background-color: #c8f7c5; }
+      #paymentInfo { display: none; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Attendance Check</h2>
+      
+      <div class="info-section">
+        <div id="status" class="info-box default">Loading user information...</div>
+        <div id="quota" class="info-box loading">
+          <div class="quota-icon"></div>
+          <span>Loading quota information...</span>
+        </div>
+      </div>
+
+      <form id="attendanceForm">
+        <div class="days-container">
+          <div class="days-title">Select Available Days</div>
+          
+          <div class="checkbox-item">
+            <input type="checkbox" name="days" value="Tuesday" id="tuesday" />
+            <label for="tuesday">Tuesday</label>
+          </div>
+          
+          <div class="checkbox-item">
+            <input type="checkbox" name="days" value="Wednesday" id="wednesday" />
+            <label for="wednesday">Wednesday</label>
+          </div>
+          
+          <div class="checkbox-item">
+            <input type="checkbox" name="days" value="Thursday" id="thursday" />
+            <label for="thursday">Thursday</label>
+          </div>
+        </div>
+
+        <button type="submit">
+          <span class="submit-text">Submit Attendance</span>
+        </button>
+      </form>
+
+      <div id="paymentInfo">
+        <h3>Payment Required</h3>
+        <img id="promptpayQR" src="" alt="PromptPay QR" width="200" height="200" />
+        <div id="paymentAmount"></div>
+      </div>
+    </div>
+
+    <script>
+      const liffId = "2007876163-7dLrAMJr";
+      const totalDays = 3; // total days available
+      let attendanceLeft = 0; // remaining absences
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const checkboxItems = document.querySelectorAll('.checkbox-item');
+
+        checkboxItems.forEach(item => {
+          const checkbox = item.querySelector('input[type="checkbox"]');
+
+          item.addEventListener('click', function(e) {
+            if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+            updateCheckboxState(item, checkbox.checked);
+          });
+
+          checkbox.addEventListener('change', function() {
+            updateCheckboxState(item, this.checked);
+          });
+        });
+
+        function updateCheckboxState(item, checked) {
+          if (checked) item.classList.add('checked');
+          else item.classList.remove('checked');
+        }
+      });
+
+      function getLayoutIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("layout_id");
+      }
+
+      async function main() {
+        try {
+          await liff.init({ liffId });
+
+          if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+          }
+
+          const profile = await liff.getProfile();
+          const statusEl = document.getElementById("status");
+          const quotaEl = document.getElementById("quota");
+
+          statusEl.textContent = `Hello, ${profile.displayName}! Please select your available days and submit.`;
+          statusEl.className = "info-box success";
+
+          const layoutId = getLayoutIdFromUrl();
+          if (!layoutId) {
+            statusEl.textContent = "Layout ID missing in URL.";
+            statusEl.className = "info-box error";
+            return;
+          }
+
+          // Fetch attendance left from backend
+          try {
+            const quotaResponse = await fetch(`https://b0b8d063ff13.ngrok-free.app/get_quota`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lineID: profile.userId })
+            });
+
+            if (quotaResponse.ok) {
+              const quotaData = await quotaResponse.json();
+              attendanceLeft = quotaData.attendance;
+
+              quotaEl.innerHTML = `
+                <div class="quota-icon"></div>
+                <span>You have ${attendanceLeft} absence(s) remaining.</span>
+              `;
+              quotaEl.className = "info-box success";
+
+            } else {
+              quotaEl.innerHTML = `<span>Failed to fetch attendance info.</span>`;
+              quotaEl.className = "info-box error";
+            }
+          } catch (err) {
+            quotaEl.innerHTML = `<span>Error loading attendance: ${err.message}</span>`;
+            quotaEl.className = "info-box error";
+          }
+
+          // Form submission
+          const form = document.getElementById("attendanceForm");
+          const submitBtn = form.querySelector('button[type="submit"]');
+
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const checkedDays = Array.from(form.elements["days"])
+              .filter(cb => cb.checked)
+              .map(cb => cb.value);
+
+            const skippedDays = totalDays - checkedDays.length;
+
+            if (skippedDays > attendanceLeft) {
+              alert(`You cannot skip more than ${attendanceLeft} day(s).`);
+              return;
+            }
+
+            if (checkedDays.length === 0) {
+              alert("Please select at least one day.");
+              return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span>Submitting...';
+            statusEl.textContent = "Processing your attendance...";
+            statusEl.className = "info-box loading";
+
+            try {
+              const response = await fetch(
+                `https://b0b8d063ff13.ngrok-free.app/check_attendance/${getLayoutIdFromUrl()}`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    days: checkedDays,
+                  }),
+                }
+              );
+
+              if (response.ok) {
+                const paymentInfo = document.getElementById("paymentInfo");
+                const promptpayQR = document.getElementById("promptpayQR");
+                const paymentAmount = document.getElementById("paymentAmount");
+
+                promptpayQR.src = `https://promptpay.io/0864395473.png`;
+                paymentAmount.textContent = `Amount: ${checkedDays.length * 100} THB`;
+
+                paymentInfo.style.display = "block";
+
+                statusEl.textContent = "Attendance submitted successfully! Please proceed with payment.";
+                statusEl.className = "info-box success";
+
+                form.reset();
+                document.querySelectorAll('.checkbox-item').forEach(item => item.classList.remove('checked'));
+
+                // Update remaining absences
+                attendanceLeft = totalDays - checkedDays.length;
+                quotaEl.innerHTML = `<div class="quota-icon"></div><span>You have ${attendanceLeft} absence(s) remaining.</span>`;
+
+              } else {
+                statusEl.textContent = "Failed to submit attendance. Please try again.";
+                statusEl.className = "info-box error";
+              }
+            } catch (error) {
+              statusEl.textContent = "Error submitting attendance: " + error.message;
+              statusEl.className = "info-box error";
+            } finally {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span class="submit-text">Submit Attendance</span>';
+            }
+          });
+
+        } catch (error) {
+          statusEl.textContent = "Error loading profile: " + error.message;
+          statusEl.className = "info-box error";
+        }
+      }
+
+      main();
+    </script>
+  </body>
+</html>

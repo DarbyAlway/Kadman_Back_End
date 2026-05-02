@@ -1,2 +1,28 @@
+# Environment
 .env
-.exe
+*.env
+
+# Executables
+*.exe
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+
+# Vite / frontend build
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
